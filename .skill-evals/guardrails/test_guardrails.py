@@ -117,6 +117,19 @@ class Checks(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("fails", why)
 
+    def test_verify_wired_and_passing(self):
+        d = repo({r.CONFIG: "commands:\n  verify: exit 0\n"})
+        self.assertFalse(r.c_verify(d, r.load_config(d))[0])
+        hook = Path(d, ".git", "hooks", "pre-push")
+        hook.write_text("#!/bin/sh\nexit 0\n")
+        hook.chmod(0o755)
+        self.assertTrue(r.c_verify(d, r.load_config(d))[0])
+        Path(d, r.CONFIG).write_text("commands:\n  verify: exit 4\n")
+        hook.write_text("#!/bin/sh\nexit 4\n")
+        ok, why = r.c_verify(d, r.load_config(d))
+        self.assertFalse(ok)
+        self.assertIn("fails", why)
+
 
 if __name__ == "__main__":
     unittest.main()

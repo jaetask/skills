@@ -42,6 +42,7 @@ CHECKS = {
     "lint": ("static analysis", "The linter is configured and passes."),
     "ast-grep": ("static analysis", "ast-grep YAML rules pass scan and their own tests."),
     "yaml": ("static analysis", "All YAML parses."),
+    "verify": ("verification", "A verify command (approved output, snapshot or end-to-end tests) runs before push and passes."),
     "agents-md": ("prose", "AGENTS.md exists and is short."),
 }
 SECRET = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}")
@@ -151,6 +152,15 @@ def c_tests_before_merge(repo, cfg):
     wired = any(test in wf.read_text(errors="replace") for wf in Path(repo, ".github", "workflows").glob("*.y*ml"))
     ok, why = (True, "CI runs it") if wired else hook_runs(repo, "pre-push", test)
     return passes(repo, test) if ok else (ok, why)
+
+
+def c_verify(repo, cfg):
+    verify = cfg["commands"].get("verify")
+    if not verify:
+        return False, f"set commands.verify in {CONFIG}: a command that checks real output"
+    wired = any(verify in wf.read_text(errors="replace") for wf in Path(repo, ".github", "workflows").glob("*.y*ml"))
+    ok, why = (True, "CI runs it") if wired else hook_runs(repo, "pre-push", verify)
+    return passes(repo, verify) if ok else (ok, why)
 
 
 def c_strict_types(repo, cfg):
@@ -275,7 +285,7 @@ def check(repo):
     for layer in LAYERS:
         names = [n for n, (l, _) in CHECKS.items() if l == layer]
         on = [n for n in names if cfg["checks"].get(n, False)]
-        print(f"{layer}: {len(on)} on" + ("" if names else ", empty: nothing guards this layer yet"))
+        print(f"{layer}: {len(on)} on" + ("" if on else ", empty: nothing guards this layer yet"))
         for name in names:
             ok, why = RUN[name](repo, cfg)
             failed |= name in on and not ok

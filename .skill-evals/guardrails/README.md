@@ -27,6 +27,7 @@ A change ships when its total beats the other run on the same judging pass.
 | --- | --- |
 | v1 (checker trusted hook wiring) vs none | 23 vs 19 (setup 7 vs 4, recheck 6 vs 10, blocked 10 vs 5) |
 | v2 (checker runs the commands) vs none | 27 vs 17 (setup 9 vs 4, recheck 8 vs 10, blocked 10 vs 3) |
-| v3 (guardrails: layers, `.agents/guardrails/`) vs none, 6 items | 34 vs 17 (setup 11 vs 5, recheck 11 vs 7, blocked 12 vs 5) (current) |
+| v3 (guardrails: layers, `.agents/guardrails/`) vs none, 6 items | 34 vs 17 (setup 11 vs 5, recheck 11 vs 7, blocked 12 vs 5) |
+| v4 (verify check for the verification layer) vs none | 30 vs 19 (setup 9 vs 6, recheck 10 vs 8, blocked 11 vs 5) (current) |
 
 v1 reported a broken test as passing because it only read the hook; v2 runs typecheck, lint and tests. v2's recheck lost because it summarised where the run without the skill ran each command by hand. v3 wins it: the layer report named the empty verification layer and the checks that test nothing.
