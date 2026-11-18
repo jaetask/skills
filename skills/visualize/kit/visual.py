@@ -26,8 +26,8 @@ class Shape(str):
 
 def width(s, size, weight=400):
     """Rendered width for system-ui, erring wide."""
-    em = sum(.3 if c in " il.,:;'|!()[]" else .9 if c in "mwMW@%" else .7 if c.isupper() else .6 for c in s)
-    return em * size * (1.08 if weight >= 600 else 1) * 1.1  # headroom for wider fallback fonts
+    em = sum(.3 if c in " il.,:;'|!()[]" else .9 if c in "mwMW@%" else .7 if c.isupper() else .56 for c in s)
+    return em * size * (1.08 if weight >= 600 else 1) * 1.05  # headroom for wider fallback fonts
 
 
 def wrap(s, size, weight, max_w):
@@ -99,8 +99,8 @@ def svg(w, h, body, label):
     """A standalone SVG. label is the accessible description: write it as a sentence."""
     for i, a in enumerate(_rects):
         for b in _rects[i + 1:]:
-            if a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3] and not (a[0] <= b[0] and b[2] <= a[2] and a[1] <= b[1] and b[3] <= a[3]):
-                print(f"warning: boxes overlap at ({b[0]}, {b[1]}): move one", file=sys.stderr)
+            if a[0] < b[2] + 6 and b[0] < a[2] + 6 and a[1] < b[3] + 6 and b[1] < a[3] + 6 and not (a[0] <= b[0] and b[2] <= a[2] and a[1] <= b[1] and b[3] <= a[3]):
+                print(f"warning: boxes overlap or touch at ({b[0]}, {b[1]}): move one", file=sys.stderr)
     for (ax, ay), (bx, by) in _lines:
         for s, x0, y0, x1, y1 in _texts:
             if any(x0 < ax + (bx - ax) * t < x1 and y0 < ay + (by - ay) * t < y1 for t in [i / 20 for i in range(21)]):
