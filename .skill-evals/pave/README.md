@@ -9,6 +9,7 @@ Run: `.skill-evals/pave/run.sh` (needs the `claude` CLI). Each scenario runs twi
 3. **shipped**: an illegal state that keeps happening (a type).
 4. **banner**: a repeated judgement call (a one-line rule, not tooling).
 5. **typo**: a one-off (fix it; pave nothing).
+6. **drawer**: a narrow correction beside a legitimate dialog (ban drawers, not dialogs).
 
 ## Rubric
 
@@ -18,17 +19,16 @@ Score each 0–2 per run.
 2. **Rung**: the strongest mechanism that fits (type, lint, test, tool, helper, guardrail, rule); nothing paved for a one-off.
 3. **Holds**: the mechanism would actually fail the wrong path (valid config, a type that rejects the state, a script that runs).
 4. **Lean**: no prose where a mechanism exists, no spam files, superseded text deleted.
-5. **Proportion**: effort matches the lesson; judgement stays a one-line rule with the failure it prevents.
+5. **Proportion**: effort matches the lesson, and scope matches it too (no wider ban); judgement stays a one-line rule with the failure it prevents.
 
 `pave` ships a change when its total beats the other run on the same judging pass.
 
 ## Results
 
-| Version | sheet | ship | shipped | banner | typo | Total |
-|---|---|---|---|---|---|---|
-| none | 8 | 6 | 10 | 5 | 10 | 39 |
-| v1 (shipped) | 10 | 10 | 10 | 6 | 10 | 46 |
-| v2 ("can a machine see it?") | 10 | 10 | 10 | 6 | 10 | 46 |
-| v3 (rule line names AGENTS.md) | 10 | 10 | 10 | 5 | 10 | 45 |
+| Version | sheet | ship | shipped | banner | typo | drawer | Total |
+|---|---|---|---|---|---|---|---|
+| none (5 scenarios) | 8 | 6 | 10 | 5 | 10 | | 39 |
+| v1 | 9 | 10 | 10 | 8 | 10 | 7 | 54 |
+| v2 (current: "exactly the lesson, no wider") | 9 | 10 | 10 | 8 | 10 | 10 | 57 |
 
-Neither v2 nor v3 beat v1, so v1 stays. Open: **banner**. Every run either lints the wording or stores the rule in memory; none writes the one-line repo rule.
+v1 widened the drawer ban to sheets; v2 kept to the lesson. Earlier variants (a "can a machine see it?" fork, naming AGENTS.md for rules) tied or lost and were dropped. Open: **banner**. Runs lint the wording instead of writing a one-line repo rule.

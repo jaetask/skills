@@ -8,6 +8,7 @@ Skills are poetry: every word changes the outcome.
 - **Delete.** Cut any sentence the model obeys by default.
 - **Pointers, not copies.** Reference types, config and scripts; restated facts go stale.
 - **Eval.** Every skill has `.skill-evals/<skill>/`: a `README.md` (scenarios, rubric, results) and `run.sh`. Change a skill only when the eval says it wins.
+- **Generic.** A skill is process, never one repo's rules. A change ships only when it helps every repo and wins the eval.
 - **Credit.** Name the source of every borrowed idea in `README.md`.
 
 ## Evals

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against .skill-evals/pave/README.md.
 set -euo pipefail
-SKILL="$(cd "$(dirname "$0")/../../skills/pave" && pwd)"
+SKILL_MD="${SKILL_MD:-$(cd "$(dirname "$0")/../../skills/pave" && pwd)/SKILL.md}"
+VARIANTS="${VARIANTS:-with without}"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
 
@@ -44,6 +45,20 @@ J
   cat > "$1/src/Checkout.tsx" <<'J'
 export function Checkout() { return <button type="submit">Sumbit</button>; }
 J
+  cat > "$1/src/ui/dialog.tsx" <<'J'
+export function Dialog({ children }: { children: React.ReactNode }) { return <dialog open>{children}</dialog>; }
+J
+  cat > "$1/src/ui/drawer.tsx" <<'J'
+export function Drawer({ children }: { children: React.ReactNode }) { return <aside className="drawer">{children}</aside>; }
+J
+  cat > "$1/src/ConfirmDelete.tsx" <<'J'
+import { Dialog } from "./ui/dialog";
+export function ConfirmDelete({ name }: { name: string }) { return <Dialog><p>Delete {name}?</p><button>Delete</button></Dialog>; }
+J
+  cat > "$1/src/Settings.tsx" <<'J'
+import { Drawer } from "./ui/drawer";
+export function Settings() { return <Drawer><label>Email <input name="email" /></label></Drawer>; }
+J
   (cd "$1" && git init -q && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm init)
 }
 
@@ -54,18 +69,19 @@ prompt() {
     shipped) echo "Third time this week an order went to shipped with no tracking number. Fix it properly." ;;
     banner) echo "Again with the 'AI detected an issue' banner. Nothing actually checked anything. I've said this before, stop doing it." ;;
     typo) echo "Typo on the checkout button, it says Sumbit." ;;
+    drawer) echo "We never edit in a drawer here, editing gets its own page. Settings still opens a Drawer to edit the email. Make sure that can't come back." ;;
   esac
 }
-SCENARIOS="sheet ship shipped banner typo"
+SCENARIOS="${SCENARIOS:-sheet ship shipped banner typo drawer}"
 
 run() { # $1 scenario, $2 with|without
   local dir="$WORK/orders-$1-$2"
   base "$dir"
-  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills/pave" && cp "$SKILL/SKILL.md" "$dir/.claude/skills/pave/"; fi
+  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills/pave" && cp "$SKILL_MD" "$dir/.claude/skills/pave/SKILL.md"; fi
   (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached -- . ':!.claude' > "$OUT/$1-$2.diff")
 }
 
-for s in $SCENARIOS; do for v in with without; do run "$s" "$v" & done; done
+for s in $SCENARIOS; do for v in $VARIANTS; do run "$s" "$v" & done; done
 wait
 echo "$OUT"

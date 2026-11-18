@@ -9,7 +9,7 @@ Turn the lesson into a **paved road**: the path the next agent takes without bei
 
 1. State the outcome in one positive sentence.
 2. Find why the wrong path was easier: a missing type, check, tool, pointer, or a bad example in the code.
-3. Pave the strongest rung that holds it:
+3. Pave the strongest rung that holds exactly the lesson, no wider:
    - **Type**: the wrong state won't compile.
    - **Lint**: ban the pattern; the error says what to do instead.
    - **Test**: pin the behaviour. No tautological tests.
