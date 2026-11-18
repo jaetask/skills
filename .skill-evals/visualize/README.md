@@ -29,9 +29,9 @@ A change ships when its total beats the other run on the same judging pass.
 | v1 (Playwright check) | 30 (flow 10, options 10, short 10) |
 | none, rerun | 19 (flow 7, options 4, short 8) |
 | v2 (Python only: fit at draw time) | 28 (flow 9, options 10, short 9) |
-| v3 (tighter widths, touching boxes warn) vs v2, flow + options | 19 vs 14 (flow 9 vs 6, options 10 vs 8) (current) |
+| v3 (tighter widths, touching boxes warn) vs v2, flow + options | 19 vs 14 (flow 9 vs 6, options 10 vs 8) |
 | v4 (warns when text crosses a box edge) vs v3, flow + options | 19 vs 19 (flow 10 vs 9, options 9 vs 10): tie, not shipped |
-| v4 vs v3 with loop added | 27 vs 27 (flow 9 vs 8, options 9 vs 9, loop 9 vs 10): tie, not shipped |
+| v4 vs v3 with loop added | 27 vs 27 (flow 9 vs 8, options 9 vs 9, loop 9 vs 10): tie; shipped on Jae's call, the fault it catches is rare (current) |
 
 v2 flow lost a point to a line through text; the kit now warns on that, and a flow rerun came back clean.
 
