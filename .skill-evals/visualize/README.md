@@ -1,6 +1,6 @@
 # visualize
 
-Run: `PW_NODE_PATH=<node_modules with playwright> .skill-evals/visualize/run.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small TypeScript shop app: once with `visualize` installed, once without. The judge sees each run's reply and rendered visuals, labelled A and B, and this rubric.
+Run: `.skill-evals/visualize/run.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small TypeScript shop app: once with `visualize` installed, once without. The judge sees each run's reply and rendered visuals, labelled A and B, and this rubric.
 
 ## Scenarios
 
@@ -25,6 +25,10 @@ A change ships when its total beats the other run on the same judging pass.
 | Run | Total |
 | --- | --- |
 | none | 20 (flow 3, options 7, short 10) |
-| v1 | 30 (flow 10, options 10, short 10) (current) |
+| v1 (Playwright check) | 30 (flow 10, options 10, short 10) |
+| none, rerun | 19 (flow 7, options 4, short 8) |
+| v2 (Python only: fit at draw time) | 28 (flow 9, options 10, short 9) (current) |
+
+v2 flow lost a point to a line through text; the kit now warns on that, and a flow rerun came back clean.
 
 Candidates may save visuals outside the project; the reply gives the path.

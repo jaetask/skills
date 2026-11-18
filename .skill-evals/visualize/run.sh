@@ -4,8 +4,6 @@ set -euo pipefail
 SKILL_DIR="${SKILL_DIR:-$(cd "$(dirname "$0")/../../skills/visualize" && pwd)}"
 VARIANTS="${VARIANTS:-with without}"
 SCENARIOS="${SCENARIOS:-flow options short}"
-# The kit check needs Playwright: point PW_NODE_PATH at a node_modules that has it.
-export NODE_PATH="${PW_NODE_PATH:-${NODE_PATH:-}}"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
 
@@ -52,7 +50,7 @@ run() { # $1 scenario, $2 with|without
   local dir="$WORK/shop-$1-$2"
   base "$dir"
   if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills" && cp -R "$SKILL_DIR" "$dir/.claude/skills/visualize"; fi
-  (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits --allowedTools "Bash(python3:*)" "Bash(node:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
+  (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits --allowedTools "Bash(python3:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached --stat -- . ':!.claude' > "$OUT/$1-$2.files.txt"; i=0; find . \( -name "*.svg" -o -name "*.html" \) -not -path "./.claude/*" | while read -r f; do i=$((i+1)); cp "$f" "$OUT/$1-$2.$i.${f##*.}"; done)
 }
 

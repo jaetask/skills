@@ -13,8 +13,7 @@ A visual shows what you understood. A wrong one shows it at once.
 - **Status.** Decided, proposed or open. Dashed for unknowns; accent on the result only.
 - **Plain words.** Box titles of three to six words.
 
-1. Draw it with [kit/visual.py](kit/visual.py).
-2. Run `node kit/check.js <file>.svg` until it prints "no issues", then look at the screenshot it saves.
-3. Return the SVG path and one line on what it shows.
+1. Draw it with [kit/visual.py](kit/visual.py). Fix whatever it warns about.
+2. Return the SVG path and one line on what it shows.
 
-Needs Python 3; the check needs Node and Playwright.
+Needs Python 3.
