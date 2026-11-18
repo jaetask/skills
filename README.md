@@ -5,7 +5,7 @@ Make the right way the easy way.
 ## Skills
 
 - **[pave](skills/pave/SKILL.md)**: Turn a correction into a type, lint rule, test or tool.
-- **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of one thing.
+- **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of a single concept.
 
 ## Install
 
