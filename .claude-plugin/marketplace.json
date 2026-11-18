@@ -1,0 +1,14 @@
+{
+  "name": "jaetask",
+  "owner": { "name": "jaetask", "url": "https://x.com/jaetask" },
+  "description": "Skills for bespoke software builders. Make the right way the easy way.",
+  "plugins": [
+    {
+      "name": "jaetask-skills",
+      "source": "./",
+      "description": "Skills for bespoke software builders. Make the right way the easy way.",
+      "category": "development",
+      "keywords": ["agent-skills", "claude-code", "ai-agents"]
+    }
+  ]
+}

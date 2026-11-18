@@ -8,10 +8,20 @@ Make the right way the easy way.
 
 ## Install
 
+Pick one per agent.
+
 ```bash
-git clone https://github.com/jaetask/skills.git
-ln -s "$PWD/skills/skills/pave" ~/.claude/skills/pave
+npx skills@latest add jaetask/skills
 ```
+
+Claude Code, Cursor, Codex and 75+ agents. Update with `npx skills update`.
+
+```
+/plugin marketplace add jaetask/skills
+/plugin install jaetask-skills@jaetask
+```
+
+Claude Code as a plugin; it updates itself.
 
 ## Writing skills
 

@@ -1,0 +1,10 @@
+{
+  "name": "jaetask-skills",
+  "version": "0.1.0",
+  "description": "Skills for bespoke software builders. Make the right way the easy way.",
+  "author": { "name": "jaetask", "url": "https://x.com/jaetask" },
+  "homepage": "https://github.com/jaetask/skills",
+  "repository": "https://github.com/jaetask/skills",
+  "keywords": ["agent-skills", "claude-code", "ai-agents"],
+  "skills": ["./skills/pave"]
+}
