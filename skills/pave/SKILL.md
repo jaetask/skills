@@ -5,7 +5,7 @@ description: Make the right way the easy way. Use when the user corrects you, re
 
 # Pave
 
-![Before: the right way lives only in prose and the wrong way is shorter, so the agent takes it and you correct it again. After paving with the strongest rung that holds the lesson, the right way is the shortest path and the wrong way bounces off a check that says what to do.](pave.svg)
+![Before: the wrong path is easier, so you correct each new agent again and again. After pave: a type, lint rule or test blocks the wrong path, its message points to the right one, and the agent bounces onto it without you.](pave.svg)
 
 Turn the lesson into a **paved road**: the path the next agent takes without being told.
 
