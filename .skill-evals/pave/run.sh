@@ -59,6 +59,26 @@ J
 import { Drawer } from "./ui/drawer";
 export function Settings() { return <Drawer><label>Email <input name="email" /></label></Drawer>; }
 J
+  cat > "$1/src/ui/modal.tsx" <<'J'
+export function Modal({ children }: { children: React.ReactNode }) { return <div role="dialog">{children}</div>; }
+J
+  mkdir -p "$1/.agents/guardrails/rules" "$1/.agents/guardrails/rule-tests" "$1/.agents/guardrails/hooks"
+  printf 'ruleDirs: [rules]\ntestConfigs:\n  - testDir: rule-tests\n' > "$1/.agents/guardrails/sgconfig.yml"
+  printf 'commands:\n  typecheck: "npm run typecheck"\n  lint: "npm run lint"\n  test: "npm test"\nchecks:\n  ast-grep: on\n' > "$1/.agents/guardrails/checks.yml"
+  cat > "$1/.agents/guardrails/rules/no-modal-edit.yml" <<'J'
+id: no-modal-edit
+language: tsx
+severity: error
+message: "Editing gets its own page, never a modal."
+rule:
+  kind: import_statement
+  has:
+    kind: string
+    regex: "ui/modal"
+J
+  printf 'id: no-modal-edit\nvalid:\n  - import { Dialog } from "./ui/dialog"\ninvalid:\n  - import { Modal } from "./ui/modal"\n' > "$1/.agents/guardrails/rule-tests/no-modal-edit-test.yml"
+  printf '#!/bin/sh\nnpm run typecheck && npm run lint && npx ast-grep scan -c .agents/guardrails/sgconfig.yml\n' > "$1/.agents/guardrails/hooks/pre-commit"
+  chmod +x "$1/.agents/guardrails/hooks/pre-commit"
   (cd "$1" && git init -q && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm init)
 }
 
