@@ -25,7 +25,7 @@ Claude Code as a plugin; it updates itself.
 
 ## Writing skills
 
-[AGENTS.md](AGENTS.md) is the standard. Every skill carries its own eval in `evals/`.
+[AGENTS.md](AGENTS.md) is the standard. Every skill is evaluated in `.skill-evals/`.
 
 ## Credits
 

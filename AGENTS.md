@@ -4,10 +4,10 @@ Skills are poetry: every word changes the outcome.
 
 - **One word over a sentence.** Reach for a leading word the model already knows. `No tautological tests` is the bar.
 - **Positive.** Name the behaviour you want; a prohibition summons the thing it bans.
-- **Collocate.** Everything a skill owns lives in its folder: `SKILL.md`, then `evals/`. Add a file only when a branch needs it. No spam.
+- **Ship only the skill.** A skill folder holds what users install. Add a file only when a branch needs it. No spam.
 - **Delete.** Cut any sentence the model obeys by default.
 - **Pointers, not copies.** Reference types, config and scripts; restated facts go stale.
-- **Eval.** Every skill has `evals/`: a `README.md` (scenarios, rubric, results) and `run.sh`. Change a skill only when the eval says it wins.
+- **Eval.** Every skill has `.skill-evals/<skill>/`: a `README.md` (scenarios, rubric, results) and `run.sh`. Change a skill only when the eval says it wins.
 - **Credit.** Name the source of every borrowed idea in `README.md`.
 
 ## Evals

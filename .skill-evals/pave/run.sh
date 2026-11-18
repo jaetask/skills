@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against evals/README.md.
+# Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against .skill-evals/pave/README.md.
 set -euo pipefail
-SKILL="$(cd "$(dirname "$0")/.." && pwd)"
+SKILL="$(cd "$(dirname "$0")/../../skills/pave" && pwd)"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
 
