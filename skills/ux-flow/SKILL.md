@@ -19,4 +19,4 @@ Every app from one maker feels the same. The user reads, edits, and lands back w
 
 1. Build from the app's page kit: section, list row, edit link, edit page, labelled row, back. A missing piece goes into the kit, never a single page.
 2. No kit yet? Make one from the first page, then reuse it.
-3. Hold the trip: a lint rule bans sheet and drawer imports, and its error names the kit.
+3. Where the app runs lint, ban sheet and drawer imports; the error names the kit.
