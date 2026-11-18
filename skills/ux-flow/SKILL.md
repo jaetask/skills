@@ -5,6 +5,8 @@ description: Show and edit an app's data the same way on every page, so users kn
 
 # UX flow
 
+![A read page stacks sections; Edit opens that section's own edit page in the same frame, and Back, Cancel or Save return to the same spot.](ux-flow.svg)
+
 Every app from one maker feels the same. The user reads, edits, and lands back where they were.
 
 - **Read page.** Sections stacked at one width. Each has a title, one line on what it holds, and its data, read-only. A list row opens its own page.
