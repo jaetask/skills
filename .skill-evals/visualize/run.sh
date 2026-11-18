@@ -3,7 +3,7 @@
 set -euo pipefail
 SKILL_DIR="${SKILL_DIR:-$(cd "$(dirname "$0")/../../skills/visualize" && pwd)}"
 VARIANTS="${VARIANTS:-with without}"
-SCENARIOS="${SCENARIOS:-flow options short}"
+SCENARIOS="${SCENARIOS:-flow options short loop}"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
 
@@ -32,6 +32,18 @@ In-memory: 2 ms reads, lost on deploy, 4 app instances each hold a copy (about 3
 Redis: 6 ms reads, survives deploys, one shared copy, a new service to run (about $40 a month).
 Products change about 20 times a day.
 J
+  cat > "$1/src/review.ts" <<'J'
+export type Stage = "draft" | "in-review" | "changes-requested" | "approved" | "published";
+// A reviewer can send a post back; the author edits and resubmits, as many times as it takes.
+const next: Record<Stage, Stage[]> = {
+  draft: ["in-review"],
+  "in-review": ["changes-requested", "approved"],
+  "changes-requested": ["draft"],
+  approved: ["published", "draft"],
+  published: [],
+};
+export const canMove = (from: Stage, to: Stage) => next[from].includes(to);
+J
   cat > "$1/src/slug.ts" <<'J'
 export const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 J
@@ -42,6 +54,7 @@ prompt() {
   case "$1" in
     flow) echo "Draw me how an order moves from placed to delivered in this app, and where it can go wrong." ;;
     options) echo "Show me memory vs Redis for the product list cache as a picture, with the numbers from docs." ;;
+    loop) echo "Show me as a picture how a post goes through review here, including every way it gets sent back." ;;
     short) echo "What does slugify return for '  Hello World! '?" ;;
   esac
 }

@@ -7,6 +7,7 @@ Run: `.skill-evals/visualize/run.sh` (needs the `claude` CLI). Each scenario run
 1. **flow**: draw how an order moves through its states (a flow with branches).
 2. **options**: memory vs Redis as a picture, with the numbers in docs (side by side, worked example).
 3. **short**: a one-line question (answer it; no visual).
+4. **loop**: a review flow with return arrows (labels beside boxes, where they can cross an edge).
 
 ## Rubric
 
@@ -30,6 +31,7 @@ A change ships when its total beats the other run on the same judging pass.
 | v2 (Python only: fit at draw time) | 28 (flow 9, options 10, short 9) |
 | v3 (tighter widths, touching boxes warn) vs v2, flow + options | 19 vs 14 (flow 9 vs 6, options 10 vs 8) (current) |
 | v4 (warns when text crosses a box edge) vs v3, flow + options | 19 vs 19 (flow 10 vs 9, options 9 vs 10): tie, not shipped |
+| v4 vs v3 with loop added | 27 vs 27 (flow 9 vs 8, options 9 vs 9, loop 9 vs 10): tie, not shipped |
 
 v2 flow lost a point to a line through text; the kit now warns on that, and a flow rerun came back clean.
 
