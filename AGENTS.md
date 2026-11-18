@@ -10,6 +10,7 @@ Skills are poetry: every word changes the outcome.
 - **One visual.** A skill may carry one SVG beside `SKILL.md`, linked with alt text that carries the whole idea. Draw it with `visualize`.
 - **Delete.** Cut any sentence the model obeys by default.
 - **Pointers, not copies.** Reference types, config and scripts; restated facts go stale.
+- **Frontmatter.** No colon inside a value; GitHub's YAML breaks.
 - **Eval.** Every skill has `.skill-evals/<skill>/`: a `README.md` (scenarios, rubric, results) and `run.sh`. Change a skill only when the eval says it wins.
 - **Generic.** A skill is process, never one repo's rules. A change ships only when it helps every repo and wins the eval.
 - **Credit.** Name the source of every borrowed idea in `README.md`.
