@@ -6,6 +6,7 @@ Make the right way the easy way.
 
 - **[pave](skills/pave/SKILL.md)**: Turn a correction into a type, lint rule, test or tool.
 - **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of a single concept.
+- **[ux-flow](skills/ux-flow/SKILL.md)**: Show and edit data the same way on every page, so users know the next page before it lands.
 
 ## Install
 

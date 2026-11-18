@@ -16,6 +16,7 @@
   ],
   "skills": [
     "./skills/pave",
-    "./skills/visualize"
+    "./skills/visualize",
+    "./skills/ux-flow"
   ]
 }
