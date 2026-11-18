@@ -1,6 +1,6 @@
 # pave
 
-Run: `evals/pave.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small TypeScript app, named like a real project: once with `pave` installed, once without. The judge sees both diffs, labelled A and B, and this rubric. Candidates never do.
+Run: `evals/run.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small TypeScript app, named like a real project: once with `pave` installed, once without. The judge sees both diffs, labelled A and B, and this rubric. Candidates get `SKILL.md` only, never this folder.
 
 ## Scenarios
 

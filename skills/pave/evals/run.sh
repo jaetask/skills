@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against evals/pave.md.
+# Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against evals/README.md.
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKILL="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
 
@@ -61,7 +61,7 @@ SCENARIOS="sheet ship shipped banner typo"
 run() { # $1 scenario, $2 with|without
   local dir="$WORK/orders-$1-$2"
   base "$dir"
-  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills" && cp -R "$ROOT/skills/pave" "$dir/.claude/skills/pave"; fi
+  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills/pave" && cp "$SKILL/SKILL.md" "$dir/.claude/skills/pave/"; fi
   (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached -- . ':!.claude' > "$OUT/$1-$2.diff")
 }

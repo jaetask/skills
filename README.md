@@ -15,7 +15,7 @@ ln -s "$PWD/skills/skills/pave" ~/.claude/skills/pave
 
 ## Writing skills
 
-[AGENTS.md](AGENTS.md) is the standard. Every skill ships with an eval in [evals/](evals).
+[AGENTS.md](AGENTS.md) is the standard. Every skill carries its own eval in `evals/`.
 
 ## Credits
 
