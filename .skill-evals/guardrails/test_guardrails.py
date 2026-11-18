@@ -130,6 +130,17 @@ class Checks(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("fails", why)
 
+    def test_format_detected_and_wired(self):
+        d = repo({"package.json": '{"scripts": {}, "devDependencies": {"oxfmt": "1"}}', "pnpm-lock.yaml": ""})
+        self.assertEqual(r.detect_commands(d)["format"], "pnpm exec oxfmt --check .")
+        Path(d, r.CONFIG).parent.mkdir(parents=True, exist_ok=True)
+        Path(d, r.CONFIG).write_text("commands:\n  format: exit 0\n")
+        self.assertFalse(r.c_format(d, r.load_config(d))[0])
+        hook = Path(d, ".git", "hooks", "pre-commit")
+        hook.write_text("#!/bin/sh\nexit 0\n")
+        hook.chmod(0o755)
+        self.assertTrue(r.c_format(d, r.load_config(d))[0])
+
 
 if __name__ == "__main__":
     unittest.main()

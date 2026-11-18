@@ -40,6 +40,7 @@ CHECKS = {
     "tests-before-merge": ("static analysis", "Tests run before merge to main (CI or a pre-push hook)."),
     "strict-types": ("static analysis", "Types are strict."),
     "lint": ("static analysis", "The linter is configured and passes."),
+    "format": ("static analysis", "A formatter checks every commit (pre-commit hook) and the code is formatted."),
     "ast-grep": ("static analysis", "ast-grep YAML rules pass scan and their own tests."),
     "yaml": ("static analysis", "All YAML parses."),
     "verify": ("verification", "A verify command (approved output, snapshot or end-to-end tests) runs before push and passes."),
@@ -80,9 +81,24 @@ def detect_commands(repo):
     if pkg.exists():
         scripts = json.loads(pkg.read_text()).get("scripts", {})
         pm = "pnpm" if Path(repo, "pnpm-lock.yaml").exists() else "yarn" if Path(repo, "yarn.lock").exists() else "bun" if any(Path(repo, f).exists() for f in ("bun.lock", "bun.lockb")) else "npm run"
-        return {k: f"{pm} {k}" for k in ("typecheck", "lint", "test") if k in scripts}
+        cmds = {k: f"{pm} {k}" for k in ("typecheck", "lint", "test") if k in scripts}
+        deps = {**json.loads(pkg.read_text()).get("dependencies", {}), **json.loads(pkg.read_text()).get("devDependencies", {})}
+        run = "npx" if pm == "npm run" else f"{pm} exec"
+        if "format:check" in scripts:
+            cmds["format"] = f"{pm} format:check"
+        elif "oxfmt" in deps:
+            cmds["format"] = f"{run} oxfmt --check ."
+        elif "prettier" in deps:
+            cmds["format"] = f"{run} prettier --check ."
+        elif "@biomejs/biome" in deps:
+            cmds["format"] = f"{run} biome format ."
+        return cmds
     if Path(repo, "pyproject.toml").exists():
-        return {"typecheck": "uv run mypy .", "lint": "uv run ruff check .", "test": "uv run pytest"}
+        return {"typecheck": "uv run mypy .", "lint": "uv run ruff check .", "format": "uv run ruff format --check .", "test": "uv run pytest"}
+    if Path(repo, "go.mod").exists():
+        return {"format": 'test -z "$(gofmt -l .)"', "test": "go test ./..."}
+    if Path(repo, "Cargo.toml").exists():
+        return {"format": "cargo fmt --check", "test": "cargo test"}
     return {}
 
 
@@ -161,6 +177,14 @@ def c_verify(repo, cfg):
     wired = any(verify in wf.read_text(errors="replace") for wf in Path(repo, ".github", "workflows").glob("*.y*ml"))
     ok, why = (True, "CI runs it") if wired else hook_runs(repo, "pre-push", verify)
     return passes(repo, verify) if ok else (ok, why)
+
+
+def c_format(repo, cfg):
+    fmt = cfg["commands"].get("format")
+    if not fmt:
+        return False, f"set commands.format in {CONFIG}: the formatter in check mode"
+    ok, why = hook_runs(repo, "pre-commit", fmt)
+    return passes(repo, fmt) if ok else (ok, why)
 
 
 def c_strict_types(repo, cfg):

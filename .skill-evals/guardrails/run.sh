@@ -11,7 +11,7 @@ base() { # $1 = dir, $2 = scenario
   mkdir -p "$1/src/ui" "$1/test"
   cat > "$1/package.json" <<'J'
 { "name": "notes", "private": true, "type": "module",
-  "scripts": { "typecheck": "node scripts/ok.mjs typecheck", "lint": "node scripts/ok.mjs lint", "test": "node --test" } }
+  "scripts": { "typecheck": "node scripts/ok.mjs typecheck", "lint": "node scripts/ok.mjs lint", "format:check": "node scripts/ok.mjs format", "test": "node --test" } }
 J
   mkdir -p "$1/scripts" && echo 'console.log(process.argv[2] + " ok")' > "$1/scripts/ok.mjs"
   echo '{ "lockfileVersion": 3, "packages": {} }' > "$1/package-lock.json"
@@ -30,7 +30,7 @@ J
   (cd "$1" && git init -q && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm init)
   if [ "$2" = recheck ]; then # already set up and passing
     C="$1/.agents/guardrails"; mkdir -p "$C/hooks" "$C/rules" "$C/rule-tests"
-    printf '#!/bin/sh\nnpm run typecheck && npm run lint\n' > "$C/hooks/pre-commit"
+    printf '#!/bin/sh\nnpm run typecheck && npm run lint && npm run format:check\n' > "$C/hooks/pre-commit"
     printf '#!/bin/sh\nnpm test\n' > "$C/hooks/pre-push"
     chmod +x "$C/hooks/pre-commit" "$C/hooks/pre-push"
     printf 'ruleDirs: [rules]\ntestConfigs:\n  - testDir: rule-tests\n' > "$C/sgconfig.yml"
@@ -47,8 +47,8 @@ rule:
 J
     printf 'id: no-sheet\nvalid:\n  - import { a } from "./ui/page"\ninvalid:\n  - import { Sheet } from "./ui/sheet"\n' > "$C/rule-tests/no-sheet-test.yml"
     printf '.DS_Store\n' >> "$1/.gitignore"
-    printf 'commands:\n  typecheck: "npm run typecheck"\n  lint: "npm run lint"\n  test: "npm test"\nchecks:\n' > "$C/checks.yml"
-    for c in pre-commit tests-before-merge strict-types lint ast-grep gitignore no-secrets agents-md lockfile yaml; do echo "  $c: on" >> "$C/checks.yml"; done
+    printf 'commands:\n  typecheck: "npm run typecheck"\n  lint: "npm run lint"\n  format: "npm run format:check"\n  test: "npm test"\nchecks:\n' > "$C/checks.yml"
+    for c in pre-commit tests-before-merge strict-types lint format ast-grep gitignore no-secrets agents-md lockfile yaml; do echo "  $c: on" >> "$C/checks.yml"; done
     echo 'dismissed: []' >> "$C/checks.yml"
     (cd "$1" && npm i -D -s @ast-grep/cli >/dev/null 2>&1 && printf 'node_modules\n' >> .gitignore && git config core.hooksPath .agents/guardrails/hooks && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm "checks")
   fi
