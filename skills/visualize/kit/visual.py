@@ -6,7 +6,7 @@
     Path("flow.svg").write_text(svg(640, 220, b + path(...), "A flow that ..."))
 
 Text is measured, boxes wrap and grow to fit, and the canvas grows to hold everything,
-then scales down on narrow screens. svg() warns when boxes overlap or a line crosses text.
+then scales down on narrow screens. svg() warns when boxes overlap, a line crosses text, or text crosses a box edge.
 Box classes: n plain, s context (grey), f result (accent), o open (dashed).
 Text classes: t ink, m muted, a accent. Light and dark come from the viewer's setting.
 """
@@ -105,6 +105,13 @@ def svg(w, h, body, label):
         for s, x0, y0, x1, y1 in _texts:
             if any(x0 < ax + (bx - ax) * t < x1 and y0 < ay + (by - ay) * t < y1 for t in [i / 20 for i in range(21)]):
                 print(f"warning: a line crosses text: {s}", file=sys.stderr)
+    for s, x0, y0, x1, y1 in _texts:
+        for rx0, ry0, rx1, ry1 in _rects:
+            crosses = x0 < rx1 and rx0 < x1 and y0 < ry1 and ry0 < y1
+            inside = rx0 <= x0 and x1 <= rx1 and ry0 <= y0 and y1 <= ry1
+            if crosses and not inside:
+                print(f"warning: text crosses a box edge: {s}", file=sys.stderr)
+                break
     every = [t[1:] for t in _texts] + _rects
     x0, y0 = min([0] + [r[0] - 8 for r in every]), min([0] + [r[1] - 8 for r in every])
     w, h = max([w] + [r[2] + 8 for r in every]) - x0, max([h] + [r[3] + 8 for r in every]) - y0
