@@ -1,10 +1,10 @@
-# Skills for Agentic Developers
+# Skills for Bespoke Software Builders
 
-Every word earns its place.
+Make the right way the easy way.
 
 ## Skills
 
-- **[pave](skills/pave/SKILL.md)**: Make the right way the easy way.
+- **[pave](skills/pave/SKILL.md)**: Turn a correction into a type, lint rule, test or tool.
 
 ## Install
 
