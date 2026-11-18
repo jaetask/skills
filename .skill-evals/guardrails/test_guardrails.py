@@ -1,4 +1,4 @@
-"""Pins the checker's promises. Run: uv run --with pyyaml python .skill-evals/setup/test_readiness.py"""
+"""Pins the checker's promises. Run: uv run --with pyyaml python .skill-evals/guardrails/test_guardrails.py"""
 import importlib.util
 import os
 import subprocess
@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parents[2] / "skills" / "setup" / "readiness.py"
-spec = importlib.util.spec_from_file_location("readiness", SKILL)
+SKILL = Path(__file__).resolve().parents[2] / "skills" / "guardrails" / "guardrails.py"
+spec = importlib.util.spec_from_file_location("guardrails", SKILL)
 sys.dont_write_bytecode = True
 r = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(r)
@@ -33,35 +33,50 @@ class Diff(unittest.TestCase):
         os.environ["XDG_STATE_HOME"] = tempfile.mkdtemp()
 
     def test_same_state_is_silent(self):
-        d = repo({"readiness.yml": config({"agents-md": "on"})})
-        self.assertTrue(any(c.startswith("failing: agents-md") for c in r.diff(d)))
+        d = repo({r.CONFIG: config({"agents-md": "on"})})
+        self.assertTrue(any(c.startswith("prose: failing: agents-md") for c in r.diff(d)))
         self.assertEqual([c for c in r.diff(d) if not c.startswith("suggestion")], [])
 
     def test_fixed_then_broken(self):
-        d = repo({"readiness.yml": config({"agents-md": "on"})})
+        d = repo({r.CONFIG: config({"agents-md": "on"})})
         r.diff(d)
         Path(d, "AGENTS.md").write_text("# Rules\n")
-        self.assertIn("newly passing: agents-md", r.diff(d))
+        self.assertIn("prose: newly passing: agents-md", r.diff(d))
         Path(d, "AGENTS.md").unlink()
-        self.assertTrue(any(c.startswith("newly failing: agents-md") for c in r.diff(d)))
+        self.assertTrue(any(c.startswith("prose: newly failing: agents-md") for c in r.diff(d)))
 
     def test_suggestion_once_and_dismissed_never(self):
-        d = repo({"readiness.yml": config({"agents-md": "on"}, dismissed=["yaml"])})
+        d = repo({r.CONFIG: config({"agents-md": "on"}, dismissed=["yaml"])})
         first = r.diff(d)
-        self.assertIn("suggestion: turn on lockfile: " + r.CHECKS["lockfile"], first)
+        self.assertIn("suggestion: turn on lockfile (codebase): " + r.CHECKS["lockfile"][1], first)
         self.assertFalse(any("turn on yaml" in c for c in first))
         self.assertFalse(any(c.startswith("suggestion") for c in r.diff(d)))
 
     def test_disappeared_check(self):
-        d = repo({"readiness.yml": config({"agents-md": "on", "lockfile": "on"})})
+        d = repo({r.CONFIG: config({"agents-md": "on", "lockfile": "on"})})
         r.diff(d)
-        Path(d, "readiness.yml").write_text(config({"agents-md": "on"}))
+        Path(d, r.CONFIG).write_text(config({"agents-md": "on"}))
         self.assertIn("no longer checked: lockfile", r.diff(d))
 
     def test_never_edits_the_repo(self):
-        d = repo({"readiness.yml": config({k: "on" for k in r.CHECKS}), "package.json": '{"scripts": {}}'})
+        d = repo({r.CONFIG: config({k: "on" for k in r.CHECKS}), "package.json": '{"scripts": {}}'})
         r.diff(d)
         self.assertEqual(subprocess.run(["git", "status", "--porcelain"], cwd=d, capture_output=True, text=True).stdout, "")
+
+
+class Layers(unittest.TestCase):
+    def test_every_check_has_a_layer(self):
+        self.assertTrue(all(layer in r.LAYERS for layer, _ in r.CHECKS.values()))
+
+    def test_report_names_the_empty_layer(self):
+        import contextlib, io
+        os.environ["XDG_STATE_HOME"] = tempfile.mkdtemp()
+        d = repo({r.CONFIG: config({"agents-md": "on"}), "AGENTS.md": "# Rules\n"})
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit):
+            r.check(d)
+        self.assertIn("verification: 0 on, empty", out.getvalue())
+        self.assertIn("prose: 1 on", out.getvalue())
 
 
 class Checks(unittest.TestCase):
@@ -85,7 +100,7 @@ class Checks(unittest.TestCase):
         self.assertTrue(r.c_strict_types(d, r.load_config(d))[0])
 
     def test_pre_commit_must_run_both(self):
-        d = repo({"readiness.yml": "commands:\n  typecheck: echo types\n  lint: echo lint\n"})
+        d = repo({r.CONFIG: "commands:\n  typecheck: echo types\n  lint: echo lint\n"})
         hook = Path(d, ".git", "hooks", "pre-commit")
         hook.write_text("#!/bin/sh\necho types\n")
         hook.chmod(0o755)
@@ -94,7 +109,7 @@ class Checks(unittest.TestCase):
         self.assertTrue(r.c_pre_commit(d, r.load_config(d))[0])
 
     def test_wired_but_failing_tests_fail(self):
-        d = repo({"readiness.yml": "commands:\n  test: exit 3\n"})
+        d = repo({r.CONFIG: "commands:\n  test: exit 3\n"})
         hook = Path(d, ".git", "hooks", "pre-push")
         hook.write_text("#!/bin/sh\nexit 3\n")
         hook.chmod(0o755)

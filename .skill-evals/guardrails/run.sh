@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Runs the setup scenarios with and without the skill. Results land in $OUT for judging against .skill-evals/setup/README.md.
+# Runs the guardrails scenarios with and without the skill. Results land in $OUT for judging against .skill-evals/guardrails/README.md.
 set -euo pipefail
-SKILL_DIR="${SKILL_DIR:-$(cd "$(dirname "$0")/../../skills/setup" && pwd)}"
+SKILL_DIR="${SKILL_DIR:-$(cd "$(dirname "$0")/../../skills/guardrails" && pwd)}"
 VARIANTS="${VARIANTS:-with without}"
 SCENARIOS="${SCENARIOS:-setup recheck blocked}"
 OUT="${OUT:-$(mktemp -d)}"
@@ -29,12 +29,12 @@ J
   fi
   (cd "$1" && git init -q && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm init)
   if [ "$2" = recheck ]; then # already set up and passing
-    mkdir -p "$1/.githooks" "$1/rules" "$1/rule-tests"
-    printf '#!/bin/sh\nnpm run typecheck && npm run lint\n' > "$1/.githooks/pre-commit"
-    printf '#!/bin/sh\nnpm test\n' > "$1/.githooks/pre-push"
-    chmod +x "$1/.githooks/pre-commit" "$1/.githooks/pre-push"
-    printf 'ruleDirs: [rules]\ntestConfigs:\n  - testDir: rule-tests\n' > "$1/sgconfig.yml"
-    cat > "$1/rules/no-sheet.yml" <<'J'
+    C="$1/.agents/guardrails"; mkdir -p "$C/hooks" "$C/rules" "$C/rule-tests"
+    printf '#!/bin/sh\nnpm run typecheck && npm run lint\n' > "$C/hooks/pre-commit"
+    printf '#!/bin/sh\nnpm test\n' > "$C/hooks/pre-push"
+    chmod +x "$C/hooks/pre-commit" "$C/hooks/pre-push"
+    printf 'ruleDirs: [rules]\ntestConfigs:\n  - testDir: rule-tests\n' > "$C/sgconfig.yml"
+    cat > "$C/rules/no-sheet.yml" <<'J'
 id: no-sheet
 language: tsx
 severity: error
@@ -45,12 +45,12 @@ rule:
     field: source
     regex: "ui/sheet[\x27\"]$"
 J
-    printf 'id: no-sheet\nvalid:\n  - import { a } from "./ui/page"\ninvalid:\n  - import { Sheet } from "./ui/sheet"\n' > "$1/rule-tests/no-sheet-test.yml"
+    printf 'id: no-sheet\nvalid:\n  - import { a } from "./ui/page"\ninvalid:\n  - import { Sheet } from "./ui/sheet"\n' > "$C/rule-tests/no-sheet-test.yml"
     printf '.DS_Store\n' >> "$1/.gitignore"
-    printf 'commands:\n  typecheck: "npm run typecheck"\n  lint: "npm run lint"\n  test: "npm test"\nchecks:\n' > "$1/readiness.yml"
-    for c in pre-commit tests-before-merge strict-types lint ast-grep gitignore no-secrets agents-md lockfile yaml; do echo "  $c: on" >> "$1/readiness.yml"; done
-    echo 'dismissed: []' >> "$1/readiness.yml"
-    (cd "$1" && npm i -D -s @ast-grep/cli >/dev/null 2>&1 && printf 'node_modules\n' >> .gitignore && git config core.hooksPath .githooks && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm "checks")
+    printf 'commands:\n  typecheck: "npm run typecheck"\n  lint: "npm run lint"\n  test: "npm test"\nchecks:\n' > "$C/checks.yml"
+    for c in pre-commit tests-before-merge strict-types lint ast-grep gitignore no-secrets agents-md lockfile yaml; do echo "  $c: on" >> "$C/checks.yml"; done
+    echo 'dismissed: []' >> "$C/checks.yml"
+    (cd "$1" && npm i -D -s @ast-grep/cli >/dev/null 2>&1 && printf 'node_modules\n' >> .gitignore && git config core.hooksPath .agents/guardrails/hooks && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm "checks")
   fi
 }
 
@@ -64,7 +64,7 @@ prompt() {
 run() { # $1 scenario, $2 with|without
   local dir="$WORK/notes-$1-$2"
   base "$dir" "$1"
-  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills" && cp -R "$SKILL_DIR" "$dir/.claude/skills/setup"; fi
+  if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills" && cp -R "$SKILL_DIR" "$dir/.claude/skills/guardrails"; fi
   (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits --allowedTools "Bash(npm:*)" "Bash(npx:*)" "Bash(node:*)" "Bash(uv:*)" "Bash(git:*)" "Bash(chmod:*)" "Bash(ls:*)" "Bash(cat:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached HEAD -- . ':!.claude' ':!node_modules' ':!package-lock.json' > "$OUT/$1-$2.diff"; git log --oneline > "$OUT/$1-$2.log"; echo "hooksPath=$(git config core.hooksPath || true)" >> "$OUT/$1-$2.log")
 }

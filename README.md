@@ -7,7 +7,7 @@ Make the right way the easy way.
 - **[pave](skills/pave/SKILL.md)**: Turn a correction into a type, lint rule, test or tool.
 - **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of a single concept.
 - **[ux-flow](skills/ux-flow/SKILL.md)**: Show and edit data the same way on every page, so users know the next page before it lands.
-- **[setup](skills/setup/SKILL.md)**: Check a repo has the guardrails agents need, then report only what changes.
+- **[guardrails](skills/guardrails/SKILL.md)**: Check a repo has the guardrails agents need, layer by layer, then report only what changes.
 
 ## Install
 
@@ -32,4 +32,4 @@ Less is more. Keep it simple, stupid. [AGENTS.md](AGENTS.md) is the standard. Ev
 
 ## Credits
 
-Built on ideas from Matt Pocock's [skills](https://github.com/mattpocock/skills) (`retro`, `writing-for-agents`) and Lauren Tan's pstack (`encode-lessons-in-structure`, `build-the-lever`, `eval`), both MIT. `setup` borrows from Matt's `setup-matt-pocock-skills` (explore, propose, confirm, write one config) and Factory's Agent Readiness (pass or fail checks).
+Built on ideas from Matt Pocock's [skills](https://github.com/mattpocock/skills) (`retro`, `writing-for-agents`) and Lauren Tan's pstack (`encode-lessons-in-structure`, `build-the-lever`, `eval`), both MIT. `guardrails` borrows from Matt's `setup-matt-pocock-skills` (explore, propose, confirm, write one config), Factory's Agent Readiness (pass or fail checks) and Lauren's layers, credited in the skill.

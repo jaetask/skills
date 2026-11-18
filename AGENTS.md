@@ -7,7 +7,7 @@ Skills are poetry: every word changes the outcome.
 - **One word over a sentence.** Reach for a leading word the model already knows. `No tautological tests` is the bar.
 - **Positive.** Name the behaviour you want; a prohibition summons the thing it bans.
 - **Ship only the skill.** A skill folder holds what users install. Add a file only when a branch needs it.
-- **One visual.** A skill may carry one SVG beside `SKILL.md`, linked with alt text that carries the whole idea. Draw it with `visualize`.
+- **Visuals.** A skill may carry up to two SVGs beside `SKILL.md`, each linked with alt text that carries the whole idea. Draw them with `visualize`.
 - **Delete.** Cut any sentence the model obeys by default.
 - **Pointers, not copies.** Reference types, config and scripts; restated facts go stale.
 - **Frontmatter.** No colon inside a value; GitHub's YAML breaks.

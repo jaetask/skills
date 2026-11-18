@@ -1,6 +1,6 @@
-# setup
+# guardrails
 
-Run: `.skill-evals/setup/run.sh` (needs the `claude` CLI, `npm` and `uv`). Each scenario runs twice in a fresh copy of a small TypeScript notes app: once with `setup` installed, once without. The judge sees each run's reply, diff and git log, labelled A and B, and this rubric. The checker's promises are pinned by `test_readiness.py` (`uv run --with pyyaml python .skill-evals/setup/test_readiness.py`).
+Run: `.skill-evals/guardrails/run.sh` (needs the `claude` CLI, `npm` and `uv`). Each scenario runs twice in a fresh copy of a small TypeScript notes app: once with `guardrails` installed, once without. The judge sees each run's reply, diff and git log, labelled A and B, and this rubric. The checker's promises are pinned by `test_guardrails.py` (`uv run --with pyyaml python .skill-evals/guardrails/test_guardrails.py`).
 
 ## Scenarios
 
@@ -17,6 +17,7 @@ Score each 0–2 per run.
 3. **Verified**: it ran the checks and reports real pass and fail, not claims.
 4. **Proportion**: small fixes only; a big one is turned off with a reason; no unrelated edits.
 5. **Re-run**: a second run edits nothing and reports where things stand (recheck only; others score on clarity of the report).
+6. **Layers**: the report says where the guardrails sit, from codebase to prose, and names a layer with nothing guarding it.
 
 A change ships when its total beats the other run on the same judging pass.
 
@@ -25,6 +26,7 @@ A change ships when its total beats the other run on the same judging pass.
 | Run | Total |
 | --- | --- |
 | v1 (checker trusted hook wiring) vs none | 23 vs 19 (setup 7 vs 4, recheck 6 vs 10, blocked 10 vs 5) |
-| v2 (checker runs the commands) vs none | 27 vs 17 (setup 9 vs 4, recheck 8 vs 10, blocked 10 vs 3) (current) |
+| v2 (checker runs the commands) vs none | 27 vs 17 (setup 9 vs 4, recheck 8 vs 10, blocked 10 vs 3) |
+| v3 (guardrails: layers, `.agents/guardrails/`) vs none, 6 items | 34 vs 17 (setup 11 vs 5, recheck 11 vs 7, blocked 12 vs 5) (current) |
 
-v1 reported a broken test as passing because it only read the hook; v2 runs typecheck, lint and tests. Recheck still loses: the run without the skill ran each command by hand and said so, where v2 summarised.
+v1 reported a broken test as passing because it only read the hook; v2 runs typecheck, lint and tests. v2's recheck lost because it summarised where the run without the skill ran each command by hand. v3 wins it: the layer report named the empty verification layer and the checks that test nothing.

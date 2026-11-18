@@ -3,14 +3,14 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""Repo checks: plain pass or fail against files and commands. Never edits the repo.
+"""Guardrails: plain pass or fail checks, filed under Lauren Tan's layers, widest first. Never edits the repo.
 
-    uv run readiness.py init  [repo]        print a proposed readiness.yml (writes nothing)
-    uv run readiness.py check [repo]        every check, on or off, with why
-    uv run readiness.py diff  [repo ...]    only what changed since the last run; silent when nothing did
-    uv run readiness.py diff --repos FILE   the same, for each repo path listed in FILE
+    uv run guardrails.py init  [repo]        print a proposed checks.yml (writes nothing)
+    uv run guardrails.py check [repo]        every check, on or off, with why
+    uv run guardrails.py diff  [repo ...]    only what changed since the last run; silent when nothing did
+    uv run guardrails.py diff --repos FILE   the same, for each repo path listed in FILE
 
-State lives in $XDG_STATE_HOME/readiness (default ~/.local/state/readiness), never in the repo.
+State lives in $XDG_STATE_HOME/guardrails (default ~/.local/state/guardrails), never in the repo.
 """
 import fnmatch
 import hashlib
@@ -26,20 +26,23 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    sys.exit("readiness needs PyYAML. Run it with `uv run readiness.py`, or `pip install pyyaml`.")
+    sys.exit("guardrails needs PyYAML. Run it with `uv run guardrails.py`, or `pip install pyyaml`.")
 
-CONFIG = "readiness.yml"
+HOME = ".agents/guardrails"
+CONFIG = f"{HOME}/checks.yml"
+SG = f"{HOME}/sgconfig.yml"
+LAYERS = ["codebase", "static analysis", "verification", "prose"]
 CHECKS = {
-    "pre-commit": "A pre-commit hook runs typecheck and lint.",
-    "tests-before-merge": "Tests run before merge to main (CI or a pre-push hook).",
-    "strict-types": "Types are strict.",
-    "lint": "The linter is configured and passes.",
-    "ast-grep": "ast-grep YAML rules pass scan and their own tests.",
-    "gitignore": ".gitignore covers caches, builds, .env and .DS_Store.",
-    "no-secrets": "No committed secrets.",
-    "agents-md": "AGENTS.md exists and is short.",
-    "lockfile": "The lockfile is committed.",
-    "yaml": "All YAML parses.",
+    "gitignore": ("codebase", ".gitignore covers caches, builds, .env and .DS_Store."),
+    "no-secrets": ("codebase", "No committed secrets."),
+    "lockfile": ("codebase", "The lockfile is committed."),
+    "pre-commit": ("static analysis", "A pre-commit hook runs typecheck and lint."),
+    "tests-before-merge": ("static analysis", "Tests run before merge to main (CI or a pre-push hook)."),
+    "strict-types": ("static analysis", "Types are strict."),
+    "lint": ("static analysis", "The linter is configured and passes."),
+    "ast-grep": ("static analysis", "ast-grep YAML rules pass scan and their own tests."),
+    "yaml": ("static analysis", "All YAML parses."),
+    "agents-md": ("prose", "AGENTS.md exists and is short."),
 }
 SECRET = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}")
 
@@ -127,7 +130,7 @@ def ast_grep_bin(repo):
 def c_pre_commit(repo, cfg):
     cmds = cfg["commands"]
     if not cmds.get("typecheck") or not cmds.get("lint"):
-        return False, "set commands.typecheck and commands.lint in readiness.yml"
+        return False, f"set commands.typecheck and commands.lint in {CONFIG}"
     ok, why = hook_runs(repo, "pre-commit", cmds["typecheck"], cmds["lint"])
     return passes(repo, cmds["typecheck"], cmds["lint"]) if ok else (ok, why)
 
@@ -144,7 +147,7 @@ def passes(repo, *cmds):
 def c_tests_before_merge(repo, cfg):
     test = cfg["commands"].get("test")
     if not test:
-        return False, "set commands.test in readiness.yml"
+        return False, f"set commands.test in {CONFIG}"
     wired = any(test in wf.read_text(errors="replace") for wf in Path(repo, ".github", "workflows").glob("*.y*ml"))
     ok, why = (True, "CI runs it") if wired else hook_runs(repo, "pre-push", test)
     return passes(repo, test) if ok else (ok, why)
@@ -171,20 +174,20 @@ def c_lint(repo, cfg):
         return False, "no linter config"
     cmd = cfg["commands"].get("lint")
     if not cmd:
-        return False, "set commands.lint in readiness.yml"
+        return False, f"set commands.lint in {CONFIG}"
     code, out = sh(repo, cmd)
     return code == 0, f"{cmd} passes" if code == 0 else f"{cmd} fails: {out.splitlines()[-1][:160] if out else code}"
 
 
 def c_ast_grep(repo, cfg):
-    if not Path(repo, "sgconfig.yml").exists():
-        return False, "no sgconfig.yml"
+    if not Path(repo, SG).exists():
+        return False, f"no {SG}"
     exe = ast_grep_bin(repo)
     if not exe:
         return False, "ast-grep is not installed (npm i -D @ast-grep/cli, or brew install ast-grep)"
-    if not (yaml.safe_load(Path(repo, "sgconfig.yml").read_text()) or {}).get("testConfigs"):
+    if not (yaml.safe_load(Path(repo, SG).read_text()) or {}).get("testConfigs"):
         return False, "sgconfig.yml has no testConfigs, so the rules have no tests"
-    for sub in ("scan", "test --skip-snapshot-tests"):
+    for sub in (f"scan -c {SG}", f"test -c {SG} --skip-snapshot-tests"):
         code, out = sh(repo, f"'{exe}' {sub}")
         if code:
             return False, f"ast-grep {sub.split()[0]} fails: {out.splitlines()[-1][:160] if out else code}"
@@ -259,7 +262,7 @@ def run_checks(repo, names, cfg):
 def init(repo):
     cmds = detect_commands(repo)
     res = run_checks(repo, CHECKS, {"commands": cmds, "checks": {}, "dismissed": []})
-    lines = ["# Repo checks. on runs a check; off skips it. Re-run the setup skill to check again.", "commands:"]
+    lines = ["# Guardrails. on runs a check; off skips it. Re-run the guardrails skill to check again.", "commands:"]
     lines += [f"  {k}: {json.dumps(v)}" for k, v in cmds.items()] or ["  {}"]
     lines += ["checks:"] + [f"  {k}: on  # {'pass' if ok else 'fail'}: {why}" for k, (ok, why) in res.items()]
     lines += ["dismissed: []"]
@@ -269,16 +272,20 @@ def init(repo):
 def check(repo):
     cfg = load_config(repo)
     failed = False
-    for name, text in CHECKS.items():
-        on = cfg["checks"].get(name, False)
-        ok, why = RUN[name](repo, cfg)
-        failed |= on and not ok
-        print(f"{'PASS' if ok else 'FAIL'}  {'on ' if on else 'off'}  {name}: {why}")
+    for layer in LAYERS:
+        names = [n for n, (l, _) in CHECKS.items() if l == layer]
+        on = [n for n in names if cfg["checks"].get(n, False)]
+        print(f"{layer}: {len(on)} on" + ("" if names else ", empty: nothing guards this layer yet"))
+        for name in names:
+            ok, why = RUN[name](repo, cfg)
+            failed |= name in on and not ok
+            print(f"  {'PASS' if ok else 'FAIL'}  {'on ' if name in on else 'off'}  {name}: {why}")
+    print("Prose can be skipped. A rule agents keep breaking moves up: an ast-grep ban, a type, or a test.")
     sys.exit(1 if failed else 0)
 
 
 def state_file(repo):
-    root = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "readiness"
+    root = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "guardrails"
     root.mkdir(parents=True, exist_ok=True)
     real = str(Path(repo).resolve())
     return root / f"{Path(real).name}-{hashlib.sha1(real.encode()).hexdigest()[:8]}.json"
@@ -296,14 +303,14 @@ def diff(repo):
     for n, (ok, why) in res.items():
         before = last["results"].get(n)
         if before is None and not ok:
-            out.append(f"failing: {n} ({why})")
+            out.append(f"{CHECKS[n][0]}: failing: {n} ({why})")
         elif before is True and not ok:
-            out.append(f"newly failing: {n} ({why})")
+            out.append(f"{CHECKS[n][0]}: newly failing: {n} ({why})")
         elif before is False and ok:
-            out.append(f"newly passing: {n}")
+            out.append(f"{CHECKS[n][0]}: newly passing: {n}")
     out += [f"no longer checked: {n}" for n in last["results"] if n not in now]
     fresh = [n for n in CHECKS if not cfg["checks"].get(n) and n not in cfg["dismissed"] and n not in last["suggested"]]
-    out += [f"suggestion: turn on {n}: {CHECKS[n]}" for n in fresh]
+    out += [f"suggestion: turn on {n} ({CHECKS[n][0]}): {CHECKS[n][1]}" for n in fresh]
     sf.write_text(json.dumps({"repo": str(Path(repo).resolve()), "results": now, "suggested": sorted(set(last["suggested"]) | set(fresh))}, indent=1))
     return out
 
