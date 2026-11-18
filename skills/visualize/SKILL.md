@@ -1,6 +1,6 @@
 ---
 name: visualize
-description: Draw one clear visual of one thing: a flow, a before and after, two options, a timeline. Use for /visualize, or when a picture explains faster than text.
+description: Draw one clear visual of a single concept: a flow, a before and after, two options, a timeline. Use for /visualize, or when a picture explains faster than text.
 ---
 
 # Visualize
