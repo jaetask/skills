@@ -9,8 +9,10 @@
     uv run guardrails.py check [repo]        every check, on or off, with why
     uv run guardrails.py diff  [repo ...]    only what changed since the last run; silent when nothing did
     uv run guardrails.py diff --repos FILE   the same, for each repo path listed in FILE
+    uv run guardrails.py friction [repo]     friction tags from the trail log, worst first
 
 State lives in $XDG_STATE_HOME/guardrails (default ~/.local/state/guardrails), never in the repo.
+Friction comes from the trail skill's log in $XDG_STATE_HOME/trail.
 """
 import fnmatch
 import hashlib
@@ -46,6 +48,7 @@ CHECKS = {
     "verify": ("verification", "A verify command (approved output, snapshot or end-to-end tests) runs before push and passes."),
     "agents-md": ("prose", "AGENTS.md exists and is short."),
 }
+AGENTS_LINE = "Log friction and decisions with the trail skill."
 SECRET = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}")
 
 
@@ -299,7 +302,7 @@ def init(repo):
     lines = ["# Guardrails. on runs a check; off skips it. Re-run the guardrails skill to check again.", "commands:"]
     lines += [f"  {k}: {json.dumps(v)}" for k, v in cmds.items()] or ["  {}"]
     lines += ["checks:"] + [f"  {k}: on  # {'pass' if ok else 'fail'}: {why}" for k, (ok, why) in res.items()]
-    lines += ["dismissed: []"]
+    lines += ["dismissed: []", f"# AGENTS.md line: {AGENTS_LINE}"]
     print("\n".join(lines))
 
 
@@ -318,11 +321,41 @@ def check(repo):
     sys.exit(1 if failed else 0)
 
 
+def state_root(name):
+    return Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / name
+
+
 def state_file(repo):
-    root = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "guardrails"
+    root = state_root("guardrails")
     root.mkdir(parents=True, exist_ok=True)
     real = str(Path(repo).resolve())
     return root / f"{Path(real).name}-{hashlib.sha1(real.encode()).hexdigest()[:8]}.json"
+
+
+def trail_rows(repo):
+    """Friction rows from the trail log. Worktrees share their main repo's log."""
+    common = git(repo, "rev-parse", "--path-format=absolute", "--git-common-dir").strip()
+    real = str(Path(common).parent.resolve() if common else Path(repo).resolve())
+    f = state_root("trail") / f"{Path(real).name}-{hashlib.sha1(real.encode()).hexdigest()[:8]}.tsv"
+    if not f.exists():
+        return []
+    head, *rows = [l.split("\t") for l in f.read_text().splitlines() if l]
+    return [dict(zip(head, r)) for r in rows]
+
+
+def rank(rows):
+    """Friction tags, worst first: times seen x minutes lost, so repeats score higher."""
+    tags = {}
+    for r in rows:
+        if r.get("kind") == "friction":
+            tags.setdefault(r.get("tag") or "untagged", []).append(r)
+    out = []
+    for tag, rs in tags.items():
+        mins = sum(max(int(m), 1) if (m := r.get("cost_min", "")).isdigit() else 1 for r in rs)
+        fixes = sorted({r["fix"] for r in rs if r.get("fix")})
+        ev = [r["evidence"] for r in rs if r.get("evidence")][-3:]
+        out.append((len(rs) * mins, f"{tag}: score {len(rs) * mins} ({len(rs)}x, {mins} min)" + (f"; fix: {' / '.join(fixes)}" if fixes else "") + (f"; evidence: {', '.join(ev)}" if ev else "")))
+    return [line for _, line in sorted(out, key=lambda x: -x[0])]
 
 
 def diff(repo):
@@ -330,6 +363,7 @@ def diff(repo):
     cfg = load_config(repo)
     sf = state_file(repo)
     last = json.loads(sf.read_text()) if sf.exists() else {"results": {}, "suggested": []}
+    trail = trail_rows(repo)
     on = [n for n, v in cfg["checks"].items() if v and n in RUN]
     res = run_checks(repo, on, cfg)
     now = {n: ok for n, (ok, _) in res.items()}
@@ -345,12 +379,13 @@ def diff(repo):
     out += [f"no longer checked: {n}" for n in last["results"] if n not in now]
     fresh = [n for n in CHECKS if not cfg["checks"].get(n) and n not in cfg["dismissed"] and n not in last["suggested"]]
     out += [f"suggestion: turn on {n} ({CHECKS[n][0]}): {CHECKS[n][1]}" for n in fresh]
-    sf.write_text(json.dumps({"repo": str(Path(repo).resolve()), "results": now, "suggested": sorted(set(last["suggested"]) | set(fresh))}, indent=1))
+    out += [f"friction: {line}" for line in rank(trail[last.get("trail", 0):])]
+    sf.write_text(json.dumps({"repo": str(Path(repo).resolve()), "results": now, "suggested": sorted(set(last["suggested"]) | set(fresh)), "trail": len(trail)}, indent=1))
     return out
 
 
 def main(argv):
-    if not argv or argv[0] not in ("init", "check", "diff"):
+    if not argv or argv[0] not in ("init", "check", "diff", "friction"):
         sys.exit(__doc__)
     cmd, rest = argv[0], argv[1:]
     if cmd == "diff":
@@ -361,6 +396,9 @@ def main(argv):
                 print(f"{repo}\n" + "\n".join(f"  {c}" for c in changes))
         return
     repo = rest[0] if rest else "."
+    if cmd == "friction":
+        print("\n".join(rank(trail_rows(repo))) or "no friction logged")
+        return
     init(repo) if cmd == "init" else check(repo)
 
 

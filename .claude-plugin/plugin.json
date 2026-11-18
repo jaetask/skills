@@ -18,6 +18,7 @@
     "./skills/pave",
     "./skills/visualize",
     "./skills/ux-flow",
-    "./skills/guardrails"
+    "./skills/guardrails",
+    "./skills/trail"
   ]
 }

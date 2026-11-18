@@ -1,6 +1,6 @@
 ---
 name: pave
-description: Make the right way the easy way. Use when the user corrects you, repeats a rule, or a mistake recurs.
+description: Make the right way the easy way. Use when the user corrects you, repeats a rule, a mistake recurs, or to pave the worst friction.
 ---
 
 # Pave
@@ -8,6 +8,8 @@ description: Make the right way the easy way. Use when the user corrects you, re
 ![Before: the wrong path is easier, so you correct each new agent again and again. After pave: a type, lint rule or test blocks the wrong path, its message points to the right one, and the agent bounces onto it without you.](pave.svg)
 
 Turn the lesson into a **paved road**: the path the next agent takes without being told.
+
+The lesson is the user's correction or, with none, the top tag from `guardrails.py friction`; its rows hold the evidence and fix.
 
 1. State the outcome in one positive sentence.
 2. Find why the wrong path was easier: a missing type, check, tool, pointer, or a bad example in the code.

@@ -10,6 +10,7 @@ Run: `.skill-evals/pave/run.sh` (needs the `claude` CLI). Each scenario runs twi
 4. **banner**: a repeated judgement call (a one-line rule, not tooling).
 5. **typo**: a one-off (fix it; pave nothing).
 6. **drawer**: a narrow correction beside a legitimate dialog (ban drawers, not dialogs).
+7. **worst**: "Fix the worst of it for good", no lesson named; the trail log ranks `drawer-edit` (3x) over a one-off slow CI. With `pave`, guardrails is installed too.
 
 ## Rubric
 
@@ -38,5 +39,9 @@ With `.agents/guardrails/` in the fixture and the sixth rubric item (scores out 
 |---|---|---|---|---|---|---|---|
 | v2 | 12 | 11 | 12 | 11 | 12 | 7 | 65 |
 | v3 (current: reads `.agents/guardrails/`, lint is an ast-grep rule there, head image) | 10 | 12 | 12 | 12 | 12 | 12 | 70 |
+
+| v4 (current: no lesson given, takes the top friction tag) vs none, worst and drawer only | worst 12 vs 10, drawer 12 vs 10: 24 vs 20 |
+
+v4 named `drawer-edit` from the ranked log (3x, 45 min) over the one-off slow CI, and kept the ban to forms inside overlays. A first v4 run tied 11 vs 11 because the log sat outside the sandbox; the fixture now adds it with `--add-dir`.
 
 v1 widened the drawer ban to sheets; v2 kept to the lesson. Earlier variants (a "can a machine see it?" fork, naming AGENTS.md for rules) tied or lost and were dropped. v3 won drawer by extending the existing modal rule where v2 banned every drawer import. Open: **banner**. Runs lint the wording instead of writing a one-line repo rule.

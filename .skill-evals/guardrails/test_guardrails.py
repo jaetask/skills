@@ -142,5 +142,42 @@ class Checks(unittest.TestCase):
         self.assertTrue(r.c_format(d, r.load_config(d))[0])
 
 
+class Friction(unittest.TestCase):
+    TRAIL = Path(__file__).resolve().parents[2] / "skills" / "trail" / "trail.sh"
+
+    def setUp(self):
+        os.environ["XDG_STATE_HOME"] = tempfile.mkdtemp()
+
+    def log(self, d, *args):
+        subprocess.run([str(self.TRAIL), *args], cwd=d, check=True, capture_output=True)
+
+    def test_repeats_rank_first_and_worktrees_share_the_log(self):
+        d = repo({"AGENTS.md": "# Rules\n"})
+        self.log(d, "friction", "slow-docs", "README wrong", "stale", "README.md:3", "30")
+        wt = Path(tempfile.mkdtemp()) / "wt"
+        subprocess.run(["git", "worktree", "add", "-q", str(wt)], cwd=d, check=True)
+        for _ in range(2):
+            self.log(wt, "friction", "test-env", "tests need\tDB_URL", "undocumented", "package.json:5", "10", "a .env.example")
+        self.log(d, "decision", "dates", "ISO strings", "readable", "src/note.ts:1")
+        ranked = r.rank(r.trail_rows(d))
+        self.assertTrue(ranked[0].startswith("test-env: score 40 (2x, 20 min); fix: a .env.example"))
+        self.assertTrue(ranked[1].startswith("slow-docs: score 30"))
+        self.assertEqual(len(ranked), 2)
+
+    def test_diff_reports_only_new_friction(self):
+        d = repo({r.CONFIG: config({"agents-md": "on"}), "AGENTS.md": "# Rules\n"})
+        self.log(d, "friction", "test-env", "x", "y", "a:1", "5")
+        self.assertTrue(any(c.startswith("friction: test-env: score 5") for c in r.diff(d)))
+        self.assertEqual(r.diff(d), [])
+
+    def test_init_proposes_the_agents_line(self):
+        import contextlib, io
+        d = repo({"AGENTS.md": "# Rules\n"})
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            r.init(d)
+        self.assertIn(r.AGENTS_LINE, out.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

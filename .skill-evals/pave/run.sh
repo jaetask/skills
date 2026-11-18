@@ -2,6 +2,7 @@
 # Runs the pave scenarios with and without the skill. Diffs land in $OUT for judging against .skill-evals/pave/README.md.
 set -euo pipefail
 SKILL_MD="${SKILL_MD:-$(cd "$(dirname "$0")/../../skills/pave" && pwd)/SKILL.md}"
+GUARDRAILS="$(cd "$(dirname "$0")/../../skills/guardrails" && pwd)"
 VARIANTS="${VARIANTS:-with without}"
 OUT="${OUT:-$(mktemp -d)}"
 WORK="$(mktemp -d)"
@@ -80,6 +81,15 @@ J
   printf '#!/bin/sh\nnpm run typecheck && npm run lint && npx ast-grep scan -c .agents/guardrails/sgconfig.yml\n' > "$1/.agents/guardrails/hooks/pre-commit"
   chmod +x "$1/.agents/guardrails/hooks/pre-commit"
   (cd "$1" && git init -q && git add -A && git -c user.name=dev -c user.email=dev@example.com commit -qm init)
+  # a trail log, where the trail skill keeps it: drawer edits repeat
+  local real; real=$(cd "$1" && pwd -P)
+  mkdir -p "$1.state/trail"
+  local log="$1.state/trail/$(basename "$real")-$(printf %s "$real" | shasum | cut -c1-8).tsv"
+  printf 'ts\tkind\ttag\twhat\twhy\tevidence\tcost_min\tfix\n' > "$log"
+  printf '2026-11-02T10:00:00Z\tfriction\tdrawer-edit\tedit form built in a Drawer, redone as a page\tnothing stops drawer imports\tsrc/Settings.tsx:1\t20\tban ui/drawer for editing\n' >> "$log"
+  printf '2026-11-06T10:00:00Z\tfriction\tslow-ci\tCI queue took 25 minutes\tshared runners\t.github/workflows/ci.yml:1\t25\t\n' >> "$log"
+  printf '2026-11-09T10:00:00Z\tfriction\tdrawer-edit\taddress edit in a Drawer again\tnothing stops drawer imports\tsrc/Settings.tsx:2\t15\tban ui/drawer for editing\n' >> "$log"
+  printf '2026-11-13T10:00:00Z\tfriction\tdrawer-edit\treviewer bounced a Drawer edit\tnothing stops drawer imports\tsrc/Settings.tsx:2\t10\tban ui/drawer for editing\n' >> "$log"
 }
 
 prompt() {
@@ -89,16 +99,18 @@ prompt() {
     shipped) echo "Third time this week an order went to shipped with no tracking number. Fix it properly." ;;
     banner) echo "Again with the 'AI detected an issue' banner. Nothing actually checked anything. I've said this before, stop doing it." ;;
     typo) echo "Typo on the checkout button, it says Sumbit." ;;
+    worst) echo "Agents keep tripping over the same thing in this repo. Fix the worst of it for good." ;;
     drawer) echo "We never edit in a drawer here, editing gets its own page. Settings still opens a Drawer to edit the email. Make sure that can't come back." ;;
   esac
 }
-SCENARIOS="${SCENARIOS:-sheet ship shipped banner typo drawer}"
+SCENARIOS="${SCENARIOS:-sheet ship shipped banner typo drawer worst}"
 
 run() { # $1 scenario, $2 with|without
   local dir="$WORK/orders-$1-$2"
   base "$dir"
   if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills/pave" && cp "$SKILL_MD" "$dir/.claude/skills/pave/SKILL.md"; fi
-  (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits > "$OUT/$1-$2.reply.md" 2>&1 || true)
+  if [ "$2" = with ] && [ "$1" = worst ]; then cp -R "$GUARDRAILS" "$dir/.claude/skills/guardrails"; fi
+  (cd "$dir" && XDG_STATE_HOME="$dir.state" claude -p "$(prompt "$1")" --permission-mode acceptEdits --add-dir "$dir.state" --allowedTools "Bash(uv:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached -- . ':!.claude' > "$OUT/$1-$2.diff")
 }
 
