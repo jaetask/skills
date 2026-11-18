@@ -1,10 +1,10 @@
 # Skills for Agentic Developers
 
-Built in public, for a bespoke workspace. Small, sharp skills that make the right way the easy way for coding agents.
+Every word earns its place.
 
 ## Skills
 
-- **[pave](skills/pave/SKILL.md)**: Make the right way the easy way. Turn a correction into a type, lint rule, test or tool.
+- **[pave](skills/pave/SKILL.md)**: Make the right way the easy way.
 
 ## Install
 
