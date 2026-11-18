@@ -7,11 +7,7 @@ description: Check a repo has the guardrails agents need, filed by layer from co
 
 ![Install once and pick checks per repo; a weekly run compares each repo with its last run and reports only what changed, suggesting a new check once.](guardrails.svg)
 
-Checks that run themselves, so agents bounce off them instead of the owner. Invest from the top layer down: the more deterministic, the better.
-
-![Five layers, widest first: codebase, static analysis, verification, prose, and human review last.](pyramid.svg)
-
-Layers from [Lauren Tan](https://x.com/poteto/status/2118613050462728659).
+Checks that run themselves, so agents bounce off them instead of the owner.
 
 Everything lives in `.agents/guardrails/`.
 
@@ -25,6 +21,10 @@ Everything lives in `.agents/guardrails/`.
    - A fix bigger than small: turn the check off and say why.
 5. Run `uv run <this skill>/guardrails.py check` until every check that is on passes. Report each layer's count, and name any empty layer.
 
-A rule agents keep breaking moves up a layer: from AGENTS.md to an ast-grep ban, a type or a test.
-
 Re-running the skill only checks. To keep watch, schedule `uv run <this skill>/guardrails.py diff --repos <file>` weekly: it prints only what changed since the last run, and nothing when nothing did.
+
+## Layers
+
+![Five layers, widest first: codebase, static analysis, verification, prose, and human review last.](pyramid.svg)
+
+Layers from [Lauren Tan](https://x.com/poteto/status/2118613050462728659). Invest from the top down: the more deterministic, the better. A rule agents keep breaking moves up a layer: from AGENTS.md to an ast-grep ban, a type or a test.
