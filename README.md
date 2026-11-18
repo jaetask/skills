@@ -5,6 +5,7 @@ Make the right way the easy way.
 ## Skills
 
 - **[pave](skills/pave/SKILL.md)**: Turn a correction into a type, lint rule, test or tool.
+- **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of one thing.
 
 ## Install
 
@@ -25,7 +26,7 @@ Claude Code as a plugin; it updates itself.
 
 ## Writing skills
 
-[AGENTS.md](AGENTS.md) is the standard. Every skill is evaluated in `.skill-evals/`.
+Less is more. Keep it simple, stupid. [AGENTS.md](AGENTS.md) is the standard. Every skill is evaluated in `.skill-evals/`.
 
 ## Credits
 
