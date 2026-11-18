@@ -24,3 +24,7 @@ A change ships when its total beats the other run on the same judging pass.
 
 | Run | Total |
 | --- | --- |
+| none | 11 (section 7, tempt 3, fresh 1) |
+| v1 | 27 (section 9, tempt 9, fresh 9) (current) |
+
+v1 lost only on Proportion: it added an `eslint.config.js` where ESLint isn't installed, and extra fields or sections nobody asked for. A judge note: one `useReturnTo` it wrote skips the open-redirect check `useBackTo` has.
