@@ -25,6 +25,10 @@ A change ships when its total beats the other run on the same judging pass.
 | Run | Total |
 | --- | --- |
 | none | 11 (section 7, tempt 3, fresh 1) |
-| v1 | 27 (section 9, tempt 9, fresh 9) (current) |
+| v1 | 27 (section 9, tempt 9, fresh 9) |
+| none, rerun | 11 (section 7, tempt 2, fresh 2) |
+| v2 (lint only where it runs) | 28 (section 10, tempt 9, fresh 9); head to head with v1: 28 vs 26 (current) |
+
+v2 added no lint config. Both versions still add unrequested fields or sections (Proportion).
 
 v1 lost only on Proportion: it added an `eslint.config.js` where ESLint isn't installed, and extra fields or sections nobody asked for. A judge note: one `useReturnTo` it wrote skips the open-redirect check `useBackTo` has.
