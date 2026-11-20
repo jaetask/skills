@@ -362,7 +362,8 @@ def ci(repo):
     bun = any(Path(repo, f).exists() for f in ("bun.lock", "bun.lockb"))
     if pkg.exists() and bun:
         scripts = json.loads(pkg.read_text()).get("scripts", {})
-        steps += ["      - uses: oven-sh/setup-bun@v2", "      - run: bun install --frozen-lockfile"]
+        pin = ["        with:", "          bun-version-file: .bun-version"] if Path(repo, ".bun-version").exists() else []
+        steps += ["      - uses: oven-sh/setup-bun@v2", *pin, "      - run: bun install --frozen-lockfile"]
         build = ["bun run build"] if "build" in scripts else []
     elif pkg.exists():
         scripts = json.loads(pkg.read_text()).get("scripts", {})
