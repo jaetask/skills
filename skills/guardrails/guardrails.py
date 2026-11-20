@@ -3,13 +3,14 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6"]
 # ///
-"""Guardrails: plain pass or fail checks, filed under Lauren Tan's layers, widest first. Never edits the repo.
+"""Guardrails: plain pass or fail checks, filed under Lauren Tan's layers, widest first. Only `ci` edits the repo.
 
     uv run guardrails.py init  [repo]        print a proposed checks.yml (writes nothing)
     uv run guardrails.py check [repo]        every check, on or off, with why
     uv run guardrails.py diff  [repo ...]    only what changed since the last run; silent when nothing did
     uv run guardrails.py diff --repos FILE   the same, for each repo path listed in FILE
     uv run guardrails.py friction [repo]     friction tags from the trail log, worst first
+    uv run guardrails.py ci [repo]           write ci.yml, auto-pr.yml and the pre-push refusal of main
 
 State lives in $XDG_STATE_HOME/guardrails (default ~/.local/state/guardrails), never in the repo.
 Friction comes from the trail skill's log in $XDG_STATE_HOME/trail.
@@ -47,7 +48,11 @@ CHECKS = {
     "yaml": ("static analysis", "All YAML parses."),
     "verify": ("verification", "A verify command (approved output, snapshot or end-to-end tests) runs before push and passes."),
     "agents-md": ("prose", "AGENTS.md exists and is short."),
+    "ci": ("static analysis", "CI (.github/workflows/ci.yml, job ci) runs the repo's checks on every branch push."),
+    "no-push-main": ("static analysis", "The pre-push hook refuses a push to main; main changes only through a green pull request."),
+    "auto-pr": ("verification", "Pushing a branch opens a pull request to main that merges itself when ci passes."),
 }
+SKILL_DIR = Path(__file__).resolve().parent
 AGENTS_LINE = "Log friction and decisions with the trail skill."
 SECRET = re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|sk-ant-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{40,}|xox[abprs]-[A-Za-z0-9-]{10,}")
 
@@ -287,6 +292,46 @@ def c_yaml(repo, cfg):
     return not bad, "all YAML parses" if not bad else "does not parse: " + "; ".join(bad[:5])
 
 
+def workflow(repo, name):
+    p = Path(repo, ".github", "workflows", name)
+    if not p.exists():
+        return None, None
+    text = p.read_text(errors="replace")
+    try:
+        return text, yaml.safe_load(text) or {}
+    except yaml.YAMLError:
+        return text, {}
+
+
+def c_ci(repo, cfg):
+    text, wf = workflow(repo, "ci.yml")
+    if text is None:
+        return False, "no .github/workflows/ci.yml; run guardrails.py ci"
+    on = wf.get("on", wf.get(True)) or {}
+    push = on.get("push", "missing") if isinstance(on, dict) else ("push" in on and {}) or "missing"
+    if push == "missing" or (isinstance(push, dict) and (push.get("branches") or push.get("branches-ignore"))):
+        return False, "ci.yml does not run on every branch push"
+    if "ci" not in (wf.get("jobs") or {}):
+        return False, "ci.yml has no job named ci (the check main requires)"
+    missing = [c for k, c in cfg["commands"].items() if k in ("typecheck", "lint", "test", "verify") and c not in text]
+    return (not missing, f"ci.yml does not run: {', '.join(missing)}" if missing else "ci runs on every branch push")
+
+
+def c_no_push_main(repo, cfg):
+    h = hooks_dir(repo) / "pre-push"
+    if not h.exists() or not os.access(h, os.X_OK):
+        return False, "no executable pre-push hook; run guardrails.py ci"
+    return ("refs/heads/main" in h.read_text(errors="replace"), "pre-push refuses main" if "refs/heads/main" in h.read_text(errors="replace") else "pre-push does not refuse main")
+
+
+def c_auto_pr(repo, cfg):
+    text, _ = workflow(repo, "auto-pr.yml")
+    if text is None:
+        return False, "no .github/workflows/auto-pr.yml; run guardrails.py ci"
+    ok = "gh pr merge" in text and "--auto" in text
+    return ok, "auto-pr opens a pull request and turns on auto-merge" if ok else "auto-pr.yml does not turn on auto-merge"
+
+
 RUN = {k: globals()["c_" + k.replace("-", "_")] for k in CHECKS}
 
 
@@ -304,6 +349,49 @@ def init(repo):
     lines += ["checks:"] + [f"  {k}: on  # {'pass' if ok else 'fail'}: {why}" for k, (ok, why) in res.items()]
     lines += ["dismissed: []", f"# AGENTS.md line: {AGENTS_LINE}"]
     print("\n".join(lines))
+
+
+def ci(repo):
+    """Writes ci.yml from the repo's commands, auto-pr.yml, and the pre-push refusal of main."""
+    cfg = load_config(repo)
+    cmds = cfg["commands"] or detect_commands(repo)
+    wf = Path(repo, ".github", "workflows")
+    wf.mkdir(parents=True, exist_ok=True)
+    steps = ["      - uses: actions/checkout@v4"]
+    pkg = Path(repo, "package.json")
+    if pkg.exists():
+        scripts = json.loads(pkg.read_text()).get("scripts", {})
+        steps += ["      - uses: actions/setup-node@v4", "        with:", "          node-version: 22", "          cache: npm", "      - run: npm ci"]
+        build = ["npm run build"] if "build" in scripts else []
+    elif Path(repo, "pyproject.toml").exists():
+        steps += ["      - uses: astral-sh/setup-uv@v6", "      - run: uv sync"]
+        build = []
+    else:
+        build = []
+    order = ["typecheck", "lint", "format", "test", "verify"]
+    steps += [f"      - run: {cmds[k]}" for k in order if cmds.get(k)] + [f"      - run: {b}" for b in build]
+    Path(wf, "ci.yml").write_text("\n".join([
+        "# Installed by the guardrails skill. Runs on every branch push; main requires the ci check.",
+        "name: ci", "on:", "  push:", "  workflow_dispatch:", "permissions:", "  contents: read",
+        "concurrency:", "  group: ci-${{ github.ref }}", "  cancel-in-progress: true",
+        "jobs:", "  ci:", "    runs-on: ubuntu-latest", "    steps:", *steps, ""]))
+    shutil.copy(SKILL_DIR / "ci" / "auto-pr.yml", Path(wf, "auto-pr.yml"))
+    hooks = Path(repo, HOME, "hooks")
+    hooks.mkdir(parents=True, exist_ok=True)
+    pre = hooks / "pre-push"
+    body = pre.read_text() if pre.exists() else "#!/bin/sh\nset -e\n"
+    if "refs/heads/main" not in body:
+        first, _, rest = body.partition("\n")
+        block = (SKILL_DIR / "ci" / "no-push-main.sh").read_text()
+        body = f"{first}\n{block}{rest}" if first.startswith("#!") else f"#!/bin/sh\n{block}{body}"
+        pre.write_text(body)
+    pre.chmod(0o755)
+    print(f"""Wrote .github/workflows/ci.yml, .github/workflows/auto-pr.yml and the pre-push refusal of main.
+Turn these on in the repository's GitHub settings, once:
+  1. General > Pull Requests: tick "Allow auto-merge" and "Automatically delete head branches"; keep "Allow rebase merging" on.
+  2. Actions > General > Workflow permissions: "Read and write permissions", and tick "Allow GitHub Actions to create and approve pull requests".
+  3. Rules > Rulesets > New ruleset > Import a ruleset: {SKILL_DIR / 'ci' / 'ruleset-main.json'}
+AGENTS.md line: Push branches, never main: auto-pr opens a pull request and it merges when ci passes.""")
 
 
 def check(repo):
@@ -385,7 +473,7 @@ def diff(repo):
 
 
 def main(argv):
-    if not argv or argv[0] not in ("init", "check", "diff", "friction"):
+    if not argv or argv[0] not in ("init", "check", "diff", "friction", "ci"):
         sys.exit(__doc__)
     cmd, rest = argv[0], argv[1:]
     if cmd == "diff":
@@ -399,7 +487,7 @@ def main(argv):
     if cmd == "friction":
         print("\n".join(rank(trail_rows(repo))) or "no friction logged")
         return
-    init(repo) if cmd == "init" else check(repo)
+    {"init": init, "ci": ci}.get(cmd, check)(repo)
 
 
 if __name__ == "__main__":
