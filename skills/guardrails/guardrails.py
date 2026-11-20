@@ -88,10 +88,10 @@ def detect_commands(repo):
     pkg = Path(repo, "package.json")
     if pkg.exists():
         scripts = json.loads(pkg.read_text()).get("scripts", {})
-        pm = "pnpm" if Path(repo, "pnpm-lock.yaml").exists() else "yarn" if Path(repo, "yarn.lock").exists() else "bun" if any(Path(repo, f).exists() for f in ("bun.lock", "bun.lockb")) else "npm run"
+        pm = "pnpm" if Path(repo, "pnpm-lock.yaml").exists() else "yarn" if Path(repo, "yarn.lock").exists() else "bun run" if any(Path(repo, f).exists() for f in ("bun.lock", "bun.lockb")) else "npm run"
         cmds = {k: f"{pm} {k}" for k in ("typecheck", "lint", "test") if k in scripts}
         deps = {**json.loads(pkg.read_text()).get("dependencies", {}), **json.loads(pkg.read_text()).get("devDependencies", {})}
-        run = "npx" if pm == "npm run" else f"{pm} exec"
+        run = "npx" if pm == "npm run" else "bunx" if pm == "bun run" else f"{pm} exec"
         if "format:check" in scripts:
             cmds["format"] = f"{pm} format:check"
         elif "oxfmt" in deps:
@@ -359,7 +359,12 @@ def ci(repo):
     wf.mkdir(parents=True, exist_ok=True)
     steps = ["      - uses: actions/checkout@v4"]
     pkg = Path(repo, "package.json")
-    if pkg.exists():
+    bun = any(Path(repo, f).exists() for f in ("bun.lock", "bun.lockb"))
+    if pkg.exists() and bun:
+        scripts = json.loads(pkg.read_text()).get("scripts", {})
+        steps += ["      - uses: oven-sh/setup-bun@v2", "      - run: bun install --frozen-lockfile"]
+        build = ["bun run build"] if "build" in scripts else []
+    elif pkg.exists():
         scripts = json.loads(pkg.read_text()).get("scripts", {})
         steps += ["      - uses: actions/setup-node@v4", "        with:", "          node-version: 22", "          cache: npm", "      - run: npm ci"]
         build = ["npm run build"] if "build" in scripts else []
