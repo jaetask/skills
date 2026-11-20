@@ -1,0 +1,10 @@
+# Guardrails. on runs a check; off skips it. Re-run the guardrails skill to check again.
+commands: {}
+checks:
+  gitignore: on
+  no-secrets: on
+  yaml: on
+  agents-md: on
+  ci: on
+  auto-pr: on
+dismissed: []
