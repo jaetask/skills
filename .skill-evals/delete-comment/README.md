@@ -27,3 +27,8 @@ A change ships when its total beats the other run on the same judging pass.
 | v1 vs none | 24 vs 18 (sweep 12 vs 7, section 12 vs 11) (current) |
 
 Without the skill, the sweep run removed the `@ts-expect-error` directive, changed what `pay` returns and kept no record of why prices are whole pence. With it, the directive stayed, the `pay` fault became an issue and both decisions became ADRs. In the section run both held the rest of the repo at its count; the run without the skill gave no number for the lines left. One judging pass, on a different model from the candidates. The script records the lint exit code with `echo`, which the judge did not find in the files, so it read the lint output instead.
+| v2 (three ideas from pstack: a fresh subagent hunts, must-kill flags, constraints offered as types or tests) vs v1 | 17 vs 24 (sweep 6 vs 12, section 11 vs 12) |
+| v3 (a suppression is flagged and its directive stays) vs v1 | 21 vs 24 (sweep 9 vs 12, section 12 vs 12) |
+| v4 (a directive is code and is left as it is) vs v1 | 23 vs 24 (sweep 11 vs 12, section 12 vs 12); shipped on the user's call (current) |
+
+v2 deleted two decisions without an ADR while it waited for a yes nobody could give, and removed the `@ts-expect-error` by changing what `pay` returns. v3 kept the decisions and still removed the directive. v4 left it alone and lost one point for a report with no count of lines left. v1 scores this rubric's maximum, so the rubric cannot show v4 winning: it does not score whether a hack was fixed or whether the hunter was someone other than the author, which is what v4 adds.
