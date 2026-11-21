@@ -19,6 +19,7 @@
     "./skills/visualize",
     "./skills/ux-flow",
     "./skills/guardrails",
+    "./skills/delete-comment",
     "./skills/trail"
   ]
 }

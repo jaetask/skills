@@ -28,6 +28,32 @@ def config(checks, dismissed=()):
     return "checks:\n" + "".join(f"  {k}: {v}\n" for k, v in checks.items()) + f"dismissed: {list(dismissed)}\n"
 
 
+class NoComments(unittest.TestCase):
+    SCRIPT = (SKILL.parent.parent / "delete-comment" / "check-comments.mjs").read_text()
+
+    def repo(self, lint, baseline='{"skip": [], "files": {}}\n'):
+        return repo({
+            r.CONFIG: f'commands:\n  lint: "{lint}"\nchecks:\n  no-comments: on\n',
+            f"{r.HOME}/check-comments.mjs": self.SCRIPT,
+            f"{r.HOME}/comments.json": baseline,
+            "notes.css": "a { color: red; }\n",
+        })
+
+    def test_passes_when_lint_runs_the_ratchet_and_no_file_is_over(self):
+        d = self.repo("node .agents/guardrails/check-comments.mjs")
+        self.assertTrue(r.c_no_comments(d, r.load_config(d))[0])
+
+    def test_fails_on_a_new_comment(self):
+        d = self.repo("node .agents/guardrails/check-comments.mjs")
+        Path(d, "notes.css").write_text("/* red, for now */\na { color: red; }\n")
+        ok, why = r.c_no_comments(d, r.load_config(d))
+        self.assertFalse(ok)
+
+    def test_fails_when_lint_does_not_run_it(self):
+        d = self.repo("true")
+        self.assertIn("lint command does not run", r.c_no_comments(d, r.load_config(d))[1])
+
+
 class Diff(unittest.TestCase):
     def setUp(self):
         os.environ["XDG_STATE_HOME"] = tempfile.mkdtemp()

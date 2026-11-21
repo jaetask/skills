@@ -20,6 +20,7 @@ Everything lives in `.agents/guardrails/`.
    - **tests-before-merge**: CI runs the test command, or `hooks/pre-push` does.
    - **verify**: a command that checks real output, such as approved-output or end-to-end tests, runs in CI or `hooks/pre-push`.
    - **ast-grep**: `sgconfig.yml`, one ast-grep YAML rule per ban in `rules/` with a quoted `message`, and a test for each in `rule-tests/`. Run ast-grep with `-c .agents/guardrails/sgconfig.yml`. Install `@ast-grep/cli` as a dev dependency, or `brew install ast-grep`.
+   - **no-comments**: the [delete-comment](../delete-comment/SKILL.md) skill sorts the comments, deletes them and sets the ratchet.
    - A fix bigger than small: turn the check off and say why.
 5. Run `uv run <this skill>/guardrails.py check` until every check that is on passes. Report each layer's count, and name any empty layer.
 

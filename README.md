@@ -8,6 +8,7 @@ Make the right way the easy way.
 - **[visualize](skills/visualize/SKILL.md)**: Draw one clear visual of a single concept.
 - **[ux-flow](skills/ux-flow/SKILL.md)**: Show and edit data the same way on every page, so users know the next page before it lands.
 - **[guardrails](skills/guardrails/SKILL.md)**: Check a repo has the guardrails agents need, layer by layer, then report only what changes.
+- **[delete-comment](skills/delete-comment/SKILL.md)**: Delete code comments: excuses become issues, decisions become ADRs, and a ratchet keeps comments out.
 - **[trail](skills/trail/SKILL.md)**: Log each decision and each piece of friction, so the worst friction gets paved first.
 
 ## Install
