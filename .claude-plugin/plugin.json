@@ -20,6 +20,7 @@
     "./skills/ux-flow",
     "./skills/guardrails",
     "./skills/delete-comment",
+    "./skills/retro-to-agentic",
     "./skills/trail"
   ]
 }

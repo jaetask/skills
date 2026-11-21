@@ -1,18 +1,18 @@
 ---
 name: guardrails
-description: Check a repo has the guardrails agents need, filed by layer from codebase to prose, wire up the ones the owner picks, then report only what changes. Use for /guardrails, or to check a repo's guardrails.
+description: Check a repo has the guardrails agents need, filed by layer from codebase to prose, wire up the ones the user picks, then report only what changes. Use for /guardrails, or to check a repo's guardrails.
 ---
 
 # Guardrails
 
 ![Install once and pick checks per repo; a weekly run compares each repo with its last run and reports only what changed, suggesting a new check once.](guardrails.svg)
 
-Checks that run themselves, so agents bounce off them instead of the owner.
+Checks that run themselves, so agents bounce off them instead of the user.
 
 Everything lives in `.agents/guardrails/`.
 
 1. In the repo, run `uv run <this skill>/guardrails.py init`. It proposes `checks.yml`: the repo's typecheck, lint, format, test and verify commands, and every check with pass or fail.
-2. Show it. The owner turns each check on or off. Nothing is on until they say.
+2. Show it. The user turns each check on or off. Nothing is on until they say.
 3. Write `checks.yml`, and add the AGENTS.md line it prints.
 4. Wire up each check that is on and failing, smallest fix first:
    - **pre-commit**: `hooks/pre-commit` runs typecheck and lint; `git config core.hooksPath .agents/guardrails/hooks`, also set by the repo's install script.

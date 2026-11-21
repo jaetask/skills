@@ -9,6 +9,7 @@ Make the right way the easy way.
 - **[ux-flow](skills/ux-flow/SKILL.md)**: Show and edit data the same way on every page, so users know the next page before it lands.
 - **[guardrails](skills/guardrails/SKILL.md)**: Check a repo has the guardrails agents need, layer by layer, then report only what changes.
 - **[delete-comment](skills/delete-comment/SKILL.md)**: Delete code comments: excuses become issues, decisions become ADRs, and a ratchet keeps comments out.
+- **[retro-to-agentic](skills/retro-to-agentic/SKILL.md)**: Look back over a stretch of work, sort what was learned into environment, guardrail, skill or communication, and build the fixes the owner picks.
 - **[trail](skills/trail/SKILL.md)**: Log each decision and each piece of friction, so the worst friction gets paved first.
 
 ## Install
@@ -34,4 +35,4 @@ Less is more. Keep it simple, stupid. [AGENTS.md](AGENTS.md) is the standard. Ev
 
 ## Credits
 
-Built on ideas from Matt Pocock's [skills](https://github.com/mattpocock/skills) (`retro`, `writing-for-agents`) and Lauren Tan's pstack (`encode-lessons-in-structure`, `build-the-lever`, `eval`), both MIT. `guardrails` borrows from Matt's `setup-matt-pocock-skills` (explore, propose, confirm, write one config), Factory's Agent Readiness (pass or fail checks) and Lauren's layers, credited in the skill. `trail` builds on Lauren's `show-me-your-work` from pstack (MIT).
+Built on ideas from Matt Pocock's [skills](https://github.com/mattpocock/skills) (`retro`, `writing-for-agents`) and Lauren Tan's pstack (`encode-lessons-in-structure`, `build-the-lever`, `eval`), both MIT. `guardrails` borrows from Matt's `setup-matt-pocock-skills` (explore, propose, confirm, write one config), Factory's Agent Readiness (pass or fail checks) and Lauren's layers, credited in the skill. `retro-to-agentic` builds on Matt's `retro` (look back at a session for what the environment should carry) and adds the rungs, the numbered offer and building one at a time with `pave`. `trail` builds on Lauren's `show-me-your-work` from pstack (MIT).

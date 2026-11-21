@@ -72,9 +72,9 @@ run() { # $1 scenario, $2 with|without
   local dir="$WORK/orders-$1-$2"
   base "$dir"
   if [ "$2" = with ]; then mkdir -p "$dir/.claude/skills" && cp -R "$SKILL_DIR" "$dir/.claude/skills/delete-comment"; fi
-  (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits --allowedTools "Bash(node:*)" "Bash(npm:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
+  (cd "$dir" && claude -p "$(prompt "$1")" --permission-mode acceptEdits --allowedTools "Bash(node:*)" "Bash(npm:*)" "Task" > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached -- . ':!.claude' ':!node_modules' ':!package-lock.json' > "$OUT/$1-$2.diff")
-  (cd "$dir" && printf '// a new comment\nexport const x = 1;\n' > src/new.ts && git add -A && (npm run lint > "$OUT/$1-$2.newcomment.txt" 2>&1; echo "lint exit $?" >> "$OUT/$1-$2.newcomment.txt"))
+  (cd "$dir" && printf '// a new comment\nexport const x = 1;\n' > src/new.ts && git add -A && { code=0; npm run lint > "$OUT/$1-$2.newcomment.txt" 2>&1 || code=$?; echo "lint exit $code" >> "$OUT/$1-$2.newcomment.txt"; })
 }
 
 for s in $SCENARIOS; do for v in $VARIANTS; do run "$s" "$v" & done; done
