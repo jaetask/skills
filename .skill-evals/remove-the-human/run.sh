@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the retro-to-agentic scenarios with and without the skill. Results land in $OUT for judging against .skill-evals/retro-to-agentic/README.md.
+# Runs the remove-the-human scenarios with and without the skill. Results land in $OUT for judging against .skill-evals/remove-the-human/README.md.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 VARIANTS="${VARIANTS:-with without}"
@@ -53,7 +53,7 @@ run() { # $1 scenario, $2 with|without
   base "$dir"
   if [ "$2" = with ]; then
     mkdir -p "$dir/.claude/skills"
-    for s in retro-to-agentic pave trail guardrails; do cp -R "$ROOT/skills/$s" "$dir/.claude/skills/$s"; done
+    for s in remove-the-human pave trail guardrails; do cp -R "$ROOT/skills/$s" "$dir/.claude/skills/$s"; done
   fi
   (cd "$dir" && XDG_STATE_HOME="$dir.state" claude -p "$(prompt "$1")" --permission-mode acceptEdits --add-dir "$dir.state" --allowedTools "Bash(uv:*)" "Bash(node:*)" "Bash(npm:*)" "Bash(bash:*)" > "$OUT/$1-$2.reply.md" 2>&1 || true)
   (cd "$dir" && git add -A && git diff --cached -- . ':!.claude' > "$OUT/$1-$2.diff")

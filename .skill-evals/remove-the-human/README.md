@@ -1,6 +1,6 @@
-# retro-to-agentic
+# remove-the-human
 
-Run: `.skill-evals/retro-to-agentic/run.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small orders app with a week's notes and a trail log: once with `retro-to-agentic` (and `pave`, `trail`, `guardrails`) installed, once without. The notes hold five lessons: no vault access for deploys (twice, six hours), money as floats (twice), release steps typed by hand (twice), asking the same permission three times, and a report the user could not read. The judge sees each run's reply and diff, labelled A and B, and this rubric.
+Run: `.skill-evals/remove-the-human/run.sh` (needs the `claude` CLI). Each scenario runs twice in a fresh copy of a small orders app with a week's notes and a trail log: once with `remove-the-human` (and `pave`, `trail`, `guardrails`) installed, once without. The notes hold five lessons: no vault access for deploys (twice, six hours), money as floats (twice), release steps typed by hand (twice), asking the same permission three times, and a report the user could not read. The judge sees each run's reply and diff, labelled A and B, and this rubric.
 
 ## Scenarios
 
@@ -27,3 +27,5 @@ A change ships when its total beats the other run on the same judging pass.
 | v1 vs none | 24 vs 16 (week 12 vs 8, pick 12 vs 8) (current) |
 
 With the skill, each lesson had a rung, a cost, a fix and who can make it, numbered worst first, and nothing was built that was not picked. Without it, the week run left the lessons unranked and one fix out of its table; the pick run filed five issues before the user had chosen and never showed the float fix failing the wrong path. One judging pass, on a different model from the candidates.
+
+The skill was graded under the name `retro-to-agentic`. It was then renamed and given an opening paragraph on its purpose; the steps are the same.
